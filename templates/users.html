@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard - Depression Insight</title>
+    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/insightify.JPG') }}" alt="Insightify Logo"/>
+        </div>
+        <h1>Admin Dashboard</h1>
+
+        <div class="notification" onclick="window.location.href='{{ url_for('admin.admin_contact') }}'">
+            <i class="fas fa-bell"></i>
+            {% if unread_count > 0 %}
+            <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+        </div>
+        
+        
+        <button id="logoutBtn">Logout</button>
+
+        
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="/admin/admin_dashboard" class="active">Dashboard</a></li>
+            <li><a href="/admin/users">Registered Users</a></li>
+            <li><a href="resultsmgmt.html">Test Results</a></li>
+            <li><a href="/admin/doctors">Doctor Recommendations</a></li>
+            <li><a href="/admin/messages">Messages</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h2>Manage Users</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Date Registered</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Loop through users passed from Flask -->
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.fullname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.date_registered }}</td> 
+                    <td><button class="delete-btn" onclick="deleteUser({{ user.id }})">Delete</button></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        // Logout functionality
+       
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+        const response = await fetch('/admin/admin-logout');  // Send a request to the logout route
+        const result = await response.json();
+        if (result.success) {
+            window.location.href = result.redirect;  // Redirect to login page
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+    });
+
+        async function deleteUser(userId) {
+    if (confirm("Are you sure you want to delete this user?")) {
+        try {
+            const response = await fetch(`/admin/delete-user/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert("User deleted successfully!");
+                window.location.reload(); // Refresh to update user list
+            } else {
+                alert("Failed to delete user.");
+            }
+        } catch (error) {
+            console.error("Delete error:", error);
+        }
+    }
+}
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn more about Insightify, our mission, and how we help with depression self-assessment.">
+    <title>About - Insightify</title>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <style>
+        /* Global Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f7fa;
+    background-image: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
+    background-attachment: fixed;
+}
+
+a {
+    text-decoration: none;
+    color: #2a7db5;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #1a5a8a;
+}
+
+
+/* Main Content */
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+/* Hero Banner */
+.hero-banner {
+    position: relative;
+    height: 300px;
+    margin-bottom: 3rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hero-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    filter: brightness(0.7);
+}
+
+.hero-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    width: 80%;
+}
+
+.hero-text h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+section {
+    margin-bottom: 3rem;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    color: #2a7db5;
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(to right, #3498db, #2ecc71);
+    border-radius: 3px;
+}
+
+h3 {
+    color: #34495e;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Custom Image Styles for Content */
+.about-image {
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.about-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.about-image:hover img {
+    transform: scale(1.03);
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+.about-intro p {
+    font-size: 1.1rem;
+}
+
+.how-it-works ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.how-it-works li {
+    margin-bottom: 0.5rem;
+}
+
+.cta {
+    text-align: center;
+    background-image: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('{{ url_for("static", filename="img/pattern-bg.svg") }}');
+    background-size: cover;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.cta h3, .cta p {
+    position: relative;
+    z-index: 1;
+    color: #28636d;
+}
+
+.cta-button {
+    display: inline-block;
+    background-color: #fff;
+    color: #2a7db5;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background-color: #2a7db5;
+    transition: width 0.3s ease;
+    z-index: -1;
+}
+
+.cta-button:hover {
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:hover::before {
+    width: 100%;
+}
+
+.cta-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Mental Health Resources */
+.mental-health-resources {
+    max-width: 1200px;
+    margin: 0 auto 3rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    background-image: linear-gradient(to right, #fff 0%, #f9f9ff 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.mental-health-resources::after {
+    content: '';
+    position: absolute;
+    right: -50px;
+    bottom: -50px;
+    width: 200px;
+    height: 200px;
+    background-image: url('{{ url_for("static", filename="img/resources-bg.svg") }}');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.07;
+    z-index: 0;
+}
+
+.mental-health-resources ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.mental-health-resources li {
+    margin-bottom: 0.5rem;
+}
+
+/* Feature Cards */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin: 3rem 0;
+}
+
+.feature-card {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+.feature-image {
+    height: 200px;
+    overflow: hidden;
+}
+
+.feature-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.feature-card:hover .feature-image img {
+    transform: scale(1.1);
+}
+
+.feature-content {
+    padding: 1.5rem;
+}
+
+.feature-content h3 {
+    color: #2a7db5;
+    margin-bottom: 0.75rem;
+}
+
+/* Testimonials */
+.testimonials {
+    position: relative;
+    padding: 3rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    text-align: center;
+}
+
+.testimonial-quote {
+    font-size: 1.2rem;
+    font-style: italic;
+    max-width: 800px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+}
+
+.testimonial-quote::before,
+.testimonial-quote::after {
+    content: '"';
+    font-size: 3rem;
+    color: rgba(42, 125, 181, 0.2);
+    position: absolute;
+}
+
+.testimonial-quote::before {
+    top: -1.5rem;
+    left: -1.5rem;
+}
+
+.testimonial-quote::after {
+    bottom: -2.5rem;
+    right: -1.5rem;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.testimonial-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 1rem;
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial-info h4 {
+    margin-bottom: 0.25rem;
+    color: #2a7db5;
+}
+
+.testimonial-info p {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+/* Image Styles */
+.rounded-image {
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.rounded-image:hover {
+    transform: scale(1.02);
+}
+
+.image-caption {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-top: 0.5rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.8s ease forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .logo {
+        margin-bottom: 1rem;
+    }
+    
+    nav ul {
+        margin-bottom: 1rem;
+    }
+    
+    nav ul li {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+    
+    main {
+        padding: 0 1rem;
+    }
+    
+    .hero-banner {
+        height: 250px;
+    }
+    
+    .hero-text p {
+        font-size: 1rem;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    nav ul li {
+        margin: 0.5rem 0;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .cta-button {
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .hero-text h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-banner {
+        height: 200px;
+    }
+    
+    .testimonial-quote {
+        font-size: 1rem;
+    }
+    
+    .testimonial-quote::before,
+    .testimonial-quote::after {
+        font-size: 2rem;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+        </div>
+        
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('user.index') }}">Home</a></li>
+                <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
+                <li><a href="{{ url_for('user.about') }}" class="active">About</a></li>
+                <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="logout">
+            <button onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <img src="{{ url_for('static', filename='img/about1.jpg') }}" alt="Mental health and wellbeing">
+            <div class="hero-text">
+                <h1>Our Story & Mission</h1>
+                <p>Understanding mental health through compassion, science, and technology</p>
+            </div>
+        </div>
+
+        <section class="about-intro fade-in">
+            <h2>About Insightify</h2>
+            <p>Insightify is a platform dedicated to helping individuals gain a better understanding of their mental health. Our depression self-assessment test is based on the <strong>Patient Health Questionnaire-9 (PHQ-9)</strong>, a scientifically validated tool for screening depression.</p>
+            
+            <div class="about-image">
+                <img src="{{ url_for('static', filename='img/about_team.jpg') }}" alt="Insightify Team">
+                <p class="image-caption">Our team of mental health professionals and developers</p>
+            </div>
+            
+            <p>Insightify emerged from the recognition that many people face barriers when seeking mental health support. Our goal is to bridge this gap by providing accessible tools that can help individuals take the first step toward mental wellness.</p>
+        </section>
+
+        <section class="mission fade-in">
+            <h3>Our Mission</h3>
+            <p>We aim to <strong>empower individuals</strong> by providing a simple and confidential way to assess their mental health. Depression can be difficult to recognize, and we believe that early self-assessment can help people take the first step toward support and recovery.</p>
+            <p>Through accessible technology and evidence-based approaches, we strive to reduce stigma around mental health and make well-being a priority for everyone.</p>
+        </section>
+
+        <!-- Feature Cards -->
+        <div class="features">
+            <div class="feature-card fade-in">
+                <div class="feature-image">
+                    <img src="{{ url_for('static', filename='img/about_science.png') }}" alt="Science-based approach">
+                </div>
+                <div class="feature-content">
+                    <h3>Science-Based</h3>
+                    <p>Our assessment is based on clinically validated questionnaires used by healthcare professionals worldwide.</p>
+                </div>
+            </div>
+            
+            <div class="feature-card fade-in">
+                <div class="feature-image">
+                    <img src="{{ url_for('static', filename='img/about_privacy.png') }}" alt="Privacy first">
+                </div>
+                <div class="feature-content">
+                    <h3>Privacy First</h3>
+                    <p>Your data remains confidential. We prioritize your privacy and security in every aspect of our service.</p>
+                </div>
+            </div>
+            
+            <div class="feature-card fade-in">
+                <div class="feature-image">
+                    <img src="{{ url_for('static', filename='img/about_access.jpg') }}" alt="Accessible to all">
+                </div>
+                <div class="feature-content">
+                    <h3>Accessible to All</h3>
+                    <p>Mental health resources should be available to everyone, regardless of their background or location.</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="how-it-works fade-in">
+            <h3>How It Works</h3>
+            
+            <ol>
+                <li>Answer <strong>9 simple questions</strong> based on common depression symptoms.</li>
+                <li>Receive an <strong>immediate result</strong> indicating whether you may be experiencing depressive symptoms.</li>
+                <li>If needed, get <strong>recommendations</strong> for seeking professional help.</li>
+            </ol>
+            <p><strong>Note:</strong> This test is not a substitute for professional diagnosis. If you're struggling, please consult a mental health professional.</p>
+        </section>
+
+        
+
+        <section class="privacy fade-in">
+            <h3>Your Privacy Matters</h3>
+            <p>At Insightify, we value your privacy. Your responses are not stored, shared, or used for any purpose other than providing an immediate assessment.</p>
+            
+            <p>We adhere to strict data protection regulations and implement industry-standard security measures to ensure your information remains confidential.</p>
+        </section>
+
+        <section class="cta fade-in">
+            <h3>Take the First Step</h3>
+            <p>If you're feeling uncertain about your mental health, taking the self-assessment test can provide clarity. It's quick, confidential, and free.</p>
+            <a href="{{ url_for('user.test') }}" class="cta-button">Take the Test</a>
+        </section>
+    </main>
+
+    <section id="resources" class="mental-health-resources fade-in">
+        <h2>Helpful Mental Health Resources</h2>
+        <p>Seeking support is a sign of strength. Here are some organizations that provide mental health assistance:</p>
+
+        <ul>
+            <li><strong><a href="https://koshishnepal.org/" target="_blank">KOSHISH Nepal</a></strong> - A leading organization for mental health advocacy.</li>
+            <li><strong><a href="https://www.transculturalpsychosocial.org/" target="_blank">TPO Nepal</a></strong> - Provides mental health and psychosocial support.</li>
+            <li><strong>Suicide Prevention Hotline:</strong> Dial <strong>1166</strong> </li>
+        </ul>
+
+        <p>If you're in crisis, please reach out to a trusted friend, family member, or mental health professional.</p>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            
+            
+            <div class="copyright">
+                <p>&copy; 2025 Insightify. All rights reserved.</p>
+                <p><a href="{{ url_for('user.privacy') }}">Privacy Policy</a> | <a href="{{ url_for('user.terms') }}">Terms & Conditions</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function logout() {
+            // Logout functionality
+            window.location.href = "{{ url_for('user.logout') }}";
+        }
+        
+        // Simple animation for page elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.fade-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+            
+            elements.forEach(element => {
+                element.style.opacity = 0;
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                observer.observe(element);
+            });
+        });
+    </script>
+
+</body>
+</html>

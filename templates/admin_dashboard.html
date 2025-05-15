@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard - Depression Insight</title>
+    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/insightify.JPG') }}" alt="Insightify Logo"/>
+        </div>
+        <h1>Admin Dashboard</h1>
+
+        <div class="notification" onclick="window.location.href='{{ url_for('admin.admin_contact') }}'">
+            <i class="fas fa-bell"></i>
+            {% if unread_count > 0 %}
+            <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+        </div>
+        
+        
+        <button id="logoutBtn">Logout</button>
+
+        
+    </header>
+
+
+    <nav>
+        <ul>
+            <li><a href="/admin_dashboard" class="active">Dashboard</a></li>
+            <li><a href="/admin/users">Registered Users</a></li>
+            <li><a href="#">Test Results</a></li>
+            <li><a href="/admin/doctors">Doctor Recommendations</a></li>
+            <li><a href="{{ url_for('admin.admin_contact') }}">Messages</a></li>
+
+        </ul>
+    </nav>
+
+    <main>
+        <h2>Dashboard Overview</h2>
+        <div class="stats">
+            <div class="card">👥 Total Users: <span id="total-users">0</span></div>
+            <div class="card">📊 Tests Taken: <span id="total-tests">0</span></div>
+            <div class="card">⚠ Severe Cases: <span id="severe-cases">0</span></div>
+        </div>
+    </main>
+
+    <script>
+        // Logout functionality
+       
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+        const response = await fetch('/admin/admin-logout');  // Send a request to the logout route
+        const result = await response.json();
+        if (result.success) {
+            window.location.href = result.redirect;  // Redirect to login page
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+    });
+
+
+        // Load dashboard stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/get-stats');
+                const data = await response.json();
+                console.log("Stats data:", data);
+        
+                if (data.success) {
+                    document.getElementById('total-users').textContent = data.stats.total_users || 0;
+                    // TODO: Add similar updates for tests and severe cases
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

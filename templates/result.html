@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Insightify. Reach out to us for support, questions, or feedback.">
+    <title>Contact Us - Insightify</title>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    </head>
+    <style>
+        /* Insightify - Main Stylesheet */
+
+/* ===== Base Styles ===== */
+:root {
+  --primary: #3498db;
+  --primary-dark: #2980b9;
+  --secondary: #2ecc71;
+  --dark: #34495e;
+  --light: #ecf0f1;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --gray: #95a5a6;
+  --white: #ffffff;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --border-radius: 4px;
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: var(--dark);
+  background-color: #f8f9fa;
+  padding-bottom: 2rem;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+
+
+/* ===== Main Content ===== */
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+h2 {
+  color: var(--dark);
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background-color: var(--primary);
+}
+
+/* ===== Test Result ===== */
+.test {
+  background-color: var(--white);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.test p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.test p:last-child {
+  margin-bottom: 0;
+}
+
+/* Take the test again button */
+main + a {
+  display: inline-block;
+  background-color: var(--secondary);
+  color: var(--white);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  margin-left: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+main + a:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+  color: var(--white);
+}
+
+/* ===== Contact Form ===== */
+.contact-form {
+  background-color: var(--white);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+textarea.form-control {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.btn-submit {
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}
+
+.btn-submit:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* ===== Contact Info ===== */
+.contact-info {
+  margin-top: 2rem;
+}
+
+.contact-info h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.contact-method {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.contact-method i {
+  margin-right: 0.75rem;
+  color: var(--primary);
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* ===== Risk Level Styling ===== */
+.risk-level {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.risk-high {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #c0392b;
+}
+
+.risk-medium {
+  background-color: rgba(243, 156, 18, 0.2);
+  color: #d35400;
+}
+
+.risk-low {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #27ae60;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .logo {
+    margin-bottom: 1rem;
+  }
+  
+  nav ul {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .logout {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .logout button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 576px) {
+  nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .test {
+    padding: 1.5rem;
+  }
+  
+  main + a {
+    display: block;
+    text-align: center;
+    margin: 0 1.5rem;
+  }
+}
+    </style>
+
+<body>
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('user.index') }}">Home</a></li>
+                <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
+                <li><a href="{{ url_for('user.about') }}">About</a></li>
+                <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="logout">
+            <button onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="test">
+            <h2>Test Result</h2>
+            <p>Your score: {{ score }}</p>
+            <p>Assessment result: {{ result }}</p>
+            <p>Risk Level: {{ risk_label }}</p>
+            <p>{{ message }}</p>
+    
+            <h3>Recommendations</h3>
+            <ul>
+                {% for recommendation in recommendations %}
+                    <li>{{ recommendation }}</li>
+                {% endfor %}
+            </ul>
+    
+            <h3>Recommended Doctors</h3>
+            <ul>
+                {% for doctor in doctors %}
+                    <li>{{ doctor }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </main>
+    
+    <a href="{{ url_for('user.test') }}">Take the Test Again</a>
+    </body>
+</html>
