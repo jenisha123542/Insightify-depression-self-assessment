@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, flash, render_template_string
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 import pickle
@@ -133,6 +133,8 @@ def signup():
             conn.close()
 
 
+from flask import session  # Make sure this is imported
+
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -155,6 +157,11 @@ def login():
         user = cursor.fetchone()
         
         if user and check_password_hash(user['password'], password):
+            # ✅ Set session after successful login
+            session['user_id'] = user['id']
+            session['fullname'] = user['fullname']
+            session['email'] = user['email']
+
             return jsonify({
                 'success': True,
                 'message': 'Login successful!',
@@ -164,6 +171,7 @@ def login():
                     'email': user['email']
                 }
             }), 200
+
         return jsonify({'success': False, 'message': 'Invalid credentials!'}), 401
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
@@ -172,9 +180,11 @@ def login():
             cursor.close()
             conn.close()
 
-@user_bp.route('/logout')
+
+@user_bp.route('/logout', methods=['POST'])
 def logout():
-    return jsonify({'success': True}), 200
+    session.clear()  # clear all session data
+    return redirect(url_for('user.index'))
 
 @user_bp.route('/contact', methods=['GET', 'POST'], endpoint='user_contact')
 def contact():
@@ -206,6 +216,32 @@ def contact():
 
 @user_bp.route('/test')
 def test():
+    if 'user_id' not in session:
+        return render_template_string('''
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            </head>
+            <body>
+                <script>
+                    // Wait until SweetAlert2 is loaded
+                    window.onload = function() {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Hold on!',
+                            text: 'You need to login to take the test.',
+                            confirmButtonText: 'Login Now',
+                            confirmButtonColor: '#0f2852'
+                        }).then(() => {
+                            window.location.href = "{{ url_for('user.login') }}";
+                        });
+                    }
+                </script>
+            </body>
+            </html>
+        ''')
+    
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
