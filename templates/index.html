@@ -12,12 +12,15 @@
 
     <header>
         <div class="logo">
-            <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-        </div>
+  <a href="{{ url_for('user.index') }}">
+    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+  </a>
+</div>
         
         <nav>
             <ul>
-                <li><a href="{{ url_for('user.index') }}">Home</a></li>
+                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
+                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
                 <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
                 <li><a href="{{ url_for('user.about') }}">About</a></li>
                 <li><a href="{{ url_for('user.contact') }}">Contact</a></li>

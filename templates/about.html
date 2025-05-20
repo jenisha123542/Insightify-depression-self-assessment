@@ -8,14 +8,9 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <style>
         /* Global Styles */
- * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}  
+
     body {
-    font-family: var(--font-family);
+    /* font-family: var(--font-family); */
     line-height: 1.7;
     color: var(--dark);
     background-color: #f9fafb;
@@ -24,94 +19,6 @@
     font-size: 16px;
 }
 
-/* --- HEADER STYLES --- */
-header {
-    height: 76px;
-    background: linear-gradient(to right, #2c3e50, #3a6073);
-    padding: 0 5%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.logo {
-    height: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.logo img {
-    height: 68px;
-    width: auto;
-    transition: transform 0.25s ease;
-}
-
-.logo img:hover {
-    transform: scale(1.03);
-}
-
-header nav ul {
-    list-style: none;
-    display: flex;
-    gap: 28px;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-}
-
-header nav ul li a {
-    text-decoration: none;
-    color: white;
-    font-size: 16px;
-    font-weight: 500;
-    position: relative;
-    transition: all 0.25s ease;
-    padding: 6px 0;
-    letter-spacing: 0.3px;
-}
-
-header nav ul li a:after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(244, 164, 96, 0.8);
-    transition: width 0.25s ease;
-}
-
-header nav ul li a:hover {
-    color: rgba(244, 164, 96, 0.9);
-}
-
-header nav ul li a:hover:after {
-    width: 100%;
-}
-
-.logout button {
-    background-color: transparent;
-    border: 1.5px solid rgba(244, 164, 96, 0.8);
-    color: white;
-    padding: 7px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.25s ease;
-}
-
-.logout button:hover {
-    background-color: rgba(244, 164, 96, 0.9);
-    color: #2c3e50;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-}
 
 
 a {
@@ -582,20 +489,30 @@ p {
 
     <header>
         <div class="logo">
-            <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-        </div>
+  <a href="{{ url_for('user.index') }}">
+    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+  </a>
+</div>
         
         <nav>
             <ul>
-                <li><a href="{{ url_for('user.index') }}">Home</a></li>
+                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
+                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
                 <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
-                <li><a href="{{ url_for('user.about') }}" class="active">About</a></li>
+                <li><a href="{{ url_for('user.about') }}">About</a></li>
                 <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
             </ul>
         </nav>
-        <div class="logout">
-            <button onclick="logout()">Logout</button>
-        </div>
+        <div class="auth">
+    {% if session.get('user_id') %}
+        <form action="{{ url_for('user.logout') }}" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    {% else %}
+        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+    {% endif %}
+</div>
     </header>
 
     <main>

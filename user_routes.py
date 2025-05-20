@@ -27,7 +27,9 @@ db_config = {
 def index():
     return render_template('index.html')
 
-
+@user_bp.route('/learn-about-depression')
+def depression():
+    return render_template('depression.html')
 
 @user_bp.route('/about')
 def about():
@@ -271,63 +273,6 @@ def test():
             cursor.close()
             conn.close()
 
-# Define the get_result_details function before your route
-# def get_result_details(score):
-#     if score <= 4:
-#         result = "Minimal or no depression"
-#         message = "Your responses suggest little to no signs of depression."
-#         recommendations = [
-#             "Continue healthy routines like regular sleep and exercise.",
-#             "Stay connected with friends and family.",
-#             "Practice mindfulness or journaling.",
-#             "No clinical intervention is necessary, but remain self-aware."
-#         ]
-#         doctors = []  # Add doctors based on severity if applicable
-#     elif score <= 9:
-#         result = "Mild depression"
-#         message = "You may be experiencing mild symptoms of depression."
-#         recommendations = [
-#             "Try mood-boosting activities (e.g., walking, music, sunlight).",
-#             "Practice stress management (meditation, yoga).",
-#             "Talk to a trusted person or counselor.",
-#             "Monitor your mood over the next few weeks."
-#         ]
-#         doctors = []  # Add doctors based on severity if applicable
-#     elif score <= 14:
-#         result = "Moderate depression"
-#         message = "Your results indicate a moderate level of depression."
-#         recommendations = [
-#             "Consider talking to a mental health professional.",
-#             "Cognitive Behavioral Therapy (CBT) can be very helpful.",
-#             "Start journaling and tracking mood/sleep/diet.",
-#             "Engage in positive social interactions."
-#         ]
-#         doctors = ["Dr. John Doe (Psychiatrist)", "Dr. Jane Smith (Psychologist)"]
-#     elif score <= 19:
-#         result = "Moderately severe depression"
-#         message = "Your results suggest moderately severe depression symptoms."
-#         recommendations = [
-#             "It’s strongly recommended to consult a licensed therapist or counselor.",
-#             "Psychological therapy (CBT, IPT) or medication may be needed.",
-#             "Avoid alcohol or substance use.",
-#             "Create a daily self-care and activity plan."
-#         ]
-#         doctors = ["Dr. Emily White (Therapist)", "Dr. Michael Black (Psychiatrist)"]
-#     else:
-#         result = "Severe depression"
-#         message = "Your results indicate severe symptoms of depression."
-#         recommendations = [
-#             "Seek immediate support from a mental health professional.",
-#             "Therapy + medication is usually most effective at this stage.",
-#             "Inform a trusted family member or friend.",
-#             "Crisis helplines or emergency services may be necessary if you're in danger."
-#         ]
-#         doctors = ["Dr. Susan Green (Psychiatrist)", "Dr. Robert Brown (Therapist)"]
-
-#     return result, message, recommendations, doctors
-
-# Then, the route function
-
 @user_bp.route('/submit_test', methods=['POST'])
 def submit_test():
     if 'user_id' not in session:
@@ -335,36 +280,35 @@ def submit_test():
 
     user_id = session['user_id']
 
-    # Fetch user's answers and calculate score
+    # Collect answers
     answers = []
     total_score = 0
     for i in range(1, 10):
-        selected_option = request.form.get(f'question{i}')
+        selected_option = request.form.get(f'q{i}')
         if selected_option:
-            answers.append(selected_option)
-            total_score += int(selected_option)
+            score = int(selected_option)
+            answers.append(score)
+            total_score += score
+
+    # Logistic regression expects input as a 2D array
+    # Use total_score or individual answers based on how your model was trained
+    # Example below assumes model was trained on total_score
+    prediction = model.predict([[total_score]])[0]
+    print("Model prediction:", prediction)
+
+    # Mapping model prediction to result and risk level using a dictionary
+    prediction_map = {
+    "Minimal or No Depression": ("Minimal or No Depression", "Low"),
+    "Mild": ("Mild Depression", "Moderate"),
+    "Moderate": ("Moderate Depression", "Moderate"),
+    "Moderately Severe": ("Moderately Severe Depression", "High"),
+    "Severe": ("Severe Depression", "Very High")
+    }
 
 
-    # Make prediction using the model
-    prediction = model.predict([[total_score]])[0]  # Assuming the model takes total score as input
+    result, risk_level = prediction_map.get(prediction, ("Unknown", "Unknown"))
 
-    # Interpret model output
-    if prediction == 0:
-        result = "Minimal or No Depression"
-        risk_level = "Low"
-    elif prediction == 1:
-        result = "Mild Depression"
-        risk_level = "Moderate"
-    elif prediction == 2:
-        result = "Moderate Depression"
-        risk_level = "Moderate"
-    elif prediction == 3:
-        result = "Moderately Severe Depression"
-        risk_level = "High"
-    else:
-        result = "Severe Depression"
-        risk_level = "Very High"
-
+    # Store result in DB
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     cursor.execute(
@@ -374,8 +318,8 @@ def submit_test():
     conn.commit()
     cursor.close()
     conn.close()
-    return render_template('result.html', score=total_score, result=result, risk_level=risk_level)
 
+    return render_template('result.html', score=total_score, result=result, risk_level=risk_level)
 
 
 # This route is for the prediction part (machine learning model)
