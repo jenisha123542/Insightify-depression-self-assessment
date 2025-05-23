@@ -3,14 +3,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 import pickle
 import re
-from utils.assessment_utils import map_assessment_to_risk
-from helpers import get_result_details  
-
-
+import numpy as np
 
 # Load the model
 with open('models/depression_model.pkl', 'rb') as file:
     model = pickle.load(file)
+
+# Load the scaler too
+scaler = pickle.load(open('scaler.pkl', 'rb'))    
 
 user_bp = Blueprint("user", __name__, "/")
 
@@ -276,11 +276,11 @@ def test():
 @user_bp.route('/submit_test', methods=['POST'])
 def submit_test():
     if 'user_id' not in session:
-        return redirect(url_for('user_bp.login'))
+        return redirect(url_for('user.login'))
 
     user_id = session['user_id']
 
-    # Collect answers
+    # Collect answers and calculate total_score
     answers = []
     total_score = 0
     for i in range(1, 10):
@@ -290,37 +290,83 @@ def submit_test():
             answers.append(score)
             total_score += score
 
-    # Logistic regression expects input as a 2D array
-    # Use total_score or individual answers based on how your model was trained
-    # Example below assumes model was trained on total_score
-    prediction = model.predict([[total_score]])[0]
-    print("Model prediction:", prediction)
+    # ✅ Store score in session
+    session['total_score'] = total_score
 
-    # Mapping model prediction to result and risk level using a dictionary
+    # Proceed to phase 2
+    return redirect(url_for('user.phase2_questionnaire'))
+
+
+@user_bp.route('/phase2', methods=['GET'])
+def phase2_questionnaire():
+    return render_template('phase2.html') 
+
+@user_bp.route('/submit_questionnaire', methods=['POST'])
+def submit_questionnaire():
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+
+    name = request.form['name']
+    age = request.form['age']
+    gender = request.form['gender']
+    location = request.form['location']
+    interest = request.form['interest']
+
+    # Store additional user info in session (optional)
+    session['user_info'] = {
+        'name': name,
+        'age': age,
+        'gender': gender,
+        'location': location,
+        'interest': interest
+    }
+
+    # ✅ Get score from session
+    total_score = session.get('total_score')
+
+    if total_score is None:
+        return "Test score not found. Please retake the test.", 400
+    
+    # Scale the score properly before prediction
+    import pandas as pd
+    score_df = pd.DataFrame([[total_score]], columns=['PHQ-9 Total Score'])
+    scaled_score = scaler.transform(score_df)
+
+    # ✅ Predict using model
+    prediction = model.predict(scaled_score)[0]
+    print("Raw model prediction:", prediction)
+    print("Model prediction output:", prediction)
+
+    # ✅ Map prediction
     prediction_map = {
-    "Minimal or No Depression": ("Minimal or No Depression", "Low"),
+    "Minimal": ("Minimal or No Depression", "Low"),
     "Mild": ("Mild Depression", "Moderate"),
     "Moderate": ("Moderate Depression", "Moderate"),
-    "Moderately Severe": ("Moderately Severe Depression", "High"),
+    "Moderately": ("Moderately Severe Depression", "High"),
     "Severe": ("Severe Depression", "Very High")
     }
 
-
+    print("Total score (raw):", total_score)
+    print("Scaled score:", scaled_score) 
     result, risk_level = prediction_map.get(prediction, ("Unknown", "Unknown"))
+    if result == "Unknown":
+        print(f"Warning: Unknown prediction '{prediction}'")
+    
 
-    # Store result in DB
+    # ✅ Store result in database
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
+    print("Params for insert:", (session['user_id'], total_score, result, risk_level, name, age, gender, location, interest))
     cursor.execute(
-        'INSERT INTO results (user_id, total_score, result, risk_level) VALUES (%s, %s, %s, %s)',
-        (user_id, total_score, result, risk_level)
-    )
+    'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+    (session['user_id'], total_score, result, risk_level, name, age, gender, location, interest)
+)
     conn.commit()
     cursor.close()
     conn.close()
 
+    # ✅ Render result page
     return render_template('result.html', score=total_score, result=result, risk_level=risk_level)
-
 
 # This route is for the prediction part (machine learning model)
 @user_bp.route('/predict', methods=['POST'])

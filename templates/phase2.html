@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Insightify - Phase 2 Questionnaire</title>
+  <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --error: #ef4444;
+      --success: #10b981;
+      --radius: 0.5rem;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 550px;
+      background-color: var(--surface);
+      padding: 2.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 0 auto;
+      margin-top: 10vh;
+      font-size: 15;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--text);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+      position: relative;
+      padding-bottom: 0.75rem;
+    }
+    
+    h2:after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      color: var(--text);
+      background-color: var(--surface);
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    input::placeholder {
+      color: var(--text-light);
+      opacity: 0.6;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.875rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+
+    @media (max-width: 550px) {
+      .container {
+        padding: 1.5rem;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+    
+    /* Custom styling for select dropdowns */
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+    
+    /* Add subtle animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .container {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="{{ url_for('user.index') }}">
+        <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+      </a>
+    </div>
+    
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
+        <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
+        <li><a href="{{ url_for('user.about') }}">About</a></li>
+        <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
+      </ul>
+    </nav>
+    
+    <div class="auth">
+      {% if session.get('user_id') %}
+        <form action="{{ url_for('user.logout') }}" method="POST">
+          <button type="submit">Logout</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>Tell Us About Yourself</h2>
+    <form action="{{ url_for('user.submit_questionnaire') }}" method="POST">
+      <div class="form-group">
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" required min="10" max="100"/>
+      </div>
+
+      <div class="form-group">
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender" required>
+          <option value="">--Select Gender--</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+          <option value="prefer_not">Prefer not to say</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Your Location:</label>
+        <input type="text" id="location" name="location" placeholder="e.g., Kathmandu" required/>
+      </div>
+
+      <div class="form-group">
+        <label for="interest">Area of Mental Health Interest:</label>
+        <select id="interest" name="interest" required>
+          <option value="">--Select an Area--</option>
+          <option value="anxiety">Anxiety</option>
+          <option value="depression">Depression</option>
+          <option value="sleep">Sleep Problems</option>
+          <option value="career">Career Stress</option>
+          <option value="relationship">Relationship Issues</option>
+          <option value="addiction">Addiction</option>
+        </select>
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+</body>
+</html>
