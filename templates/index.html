@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Insightify: A platform for depression self-assessment. Understand your mental health and take steps towards better well-being.">
+    <title>Insightify - Depression Self-Assessment</title>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+  <a href="{{ url_for('user.index') }}">
+    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+  </a>
+</div>
+        
+        <nav>
+            <ul>
+                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
+                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
+                <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
+                <li><a href="{{ url_for('user.about') }}">About</a></li>
+                <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="auth">
+    {% if session.get('user_id') %}
+        <form action="{{ url_for('user.logout') }}" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    {% else %}
+        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+    {% endif %}
+</div>
+    </header>
+    
+
+<main>
+    <section class="hero">
+        <h2>Welcome to Insightify</h2>
+        <p>Understand your mental health better with our self-assessment tool. Depression affects millions, but understanding it is the first step towards healing.</p>
+    </section>
+
+    <section class="purpose">
+        <h3>Our Purpose</h3>
+        <p>At Insightify, we provide a simple and effective tool to help you assess your mental health. Our mission is to offer valuable insights into your emotional well-being and guide you on the path to healing.</p>
+        <p>By taking our depression self-assessment test, you can gain better clarity about your feelings, discover whether you might be experiencing depression, and take the first step towards seeking support.</p>
+    </section>
+
+    <section class="did-you-know">
+        <h2>Did You Know?</h2>
+        <div class="facts">
+            <div class="fact">
+                <p>💡 Depression is the leading cause of disability worldwide.</p>
+            </div>
+            <div class="fact">
+                <p>💡 1 in 4 people will experience a mental health issue in their lifetime.</p>
+            </div>
+            <div class="fact">
+                <p>💡 Talking about mental health reduces stigma and encourages people to seek help.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h3>What People Say</h3>
+    
+        <div class="testimonial">
+            <img src="{{ url_for('static', filename='img/user1.jpg') }}" alt="User 1">
+            <p>"Insightify helped me understand my mental health better. Taking the test was my first step towards healing."</p>
+            <span>- James M.</span>
+        </div>
+    
+        <div class="testimonial">
+            <img src="{{ url_for('static', filename='img/user2.jpg') }}" alt="User 2">
+            <p>"It's reassuring to know there are resources and tools available. Thank you for making this so accessible."</p>
+            <span>- Sarah K.</span>
+        </div>
+    
+        <div class="testimonial">
+            <img src="{{ url_for('static', filename='img/user3.jpg') }}" alt="User 3">
+            <p>"I felt heard and supported. The test gave me a starting point to seek help and improve my well-being."</p>
+            <span>- Emily S.</span>
+        </div>
+    </section>
+    
+    <section class="cta">
+        <h3>Ready to Start Your Journey?</h3>
+        <p>If you're feeling uncertain about your mental health, taking the test could be a good start. It's confidential, quick, and easy.</p>
+        <a href="{{ url_for('user.test') }}" class="cta-button">Take the Test</a>
+    </section>
+</main>
+
+<section class="resources">
+    <h3>Mental Health Resources</h3>
+    <p>If you're struggling with depression or mental health concerns, you're not alone. Here are some trusted resources that can help.</p>
+    <a href="{{ url_for('user.about') }}#resources" class="cta-button">See More Resources</a>
+</section>
+
+<footer>
+    <p>&copy; 2025 Insightify. All rights reserved.</p>
+    <p><a href="{{ url_for('user.privacy') }}">Privacy Policy</a> | <a href="{{ url_for('user.terms') }}">Terms & Conditions</a></p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

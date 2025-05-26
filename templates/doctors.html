@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Admin Dashboard - Depression Insight</title>
+        <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    </head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/insightify.JPG') }}" alt="Insightify Logo"/>
+        </div>
+        <h1>Admin Dashboard</h1>
+
+        <div class="notification" onclick="window.location.href='{{ url_for('admin.admin_contact') }}'">
+            <i class="fas fa-bell"></i>
+            {% if unread_count > 0 %}
+            <span class="badge">{{ unread_count }}</span>
+            {% endif %}
+        </div>
+        
+        
+        <button id="logoutBtn">Logout</button>
+
+        
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="/admin/admin_dashboard" class="active">Dashboard</a></li>
+            <li><a href="/admin/users">Registered Users</a></li>
+            <li><a href="resultsmgmt.html">Test Results</a></li>
+            <li><a href="/admin/doctors">Doctor Recommendations</a></li>
+            <li><a href="/admin/messages">Messages</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h2>Manage Doctor List</h2>
+        <button onclick="toggleForm()">Add Doctor</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Specialty</th>
+                    <th>Location</th>
+                    <th>Experience</th>
+                    <th>Phone Number</th>
+                    <th>Area of Interest</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Loop through doctors passed from Flask -->
+                {% for doctor in doctors %}
+                <tr>
+                    <td>{{ doctor.name }}</td>
+                    <td>{{ doctor.specialty }}</td>
+                    <td>{{ doctor.location }}</td>
+                    <td>{{ doctor.experience }}</td>
+                    <td>{{ doctor.phone_number }}</td>
+                    <td>{{ doctor.area_of_interest }}</td>
+                    <td>
+                        <button onclick="deleteDoctor({{ doctor.id }})">Delete</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8">No doctors found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Hidden form to add doctor -->
+<div id="addDoctorForm" style="display: none; margin-top: 20px;">
+    <form id="doctorForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="specialty">Specialty:</label>
+        <input type="text" id="specialty" name="specialty" required>
+
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required>
+
+        <label for="experience">Experience:</label>
+        <input type="text" id="experience" name="experience" required>
+
+        <label for="phone_number">Phone Number:</label>
+        <input type="tel" id="phone_number" name="phone_number" required>
+
+        <label for="area_of_interest">Area of Interest:</label>
+        <input type="text" id="area_of_interest" name="area_of_interest" required>
+
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+    </main>
+
+    <script>
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/admin/admin-logout');  // Send a request to the logout route
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = result.redirect;  // Redirect to login page
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        async function deleteUser(userId) {
+            if (confirm("Are you sure you want to delete this user?")) {
+                try {
+                    const response = await fetch(`/admin/delete-user/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert("User deleted successfully!");
+                        window.location.reload(); // Refresh to update user list
+                    } else {
+                        alert("Failed to delete user.");
+                    }
+                } catch (error) {
+                    console.error("Delete error:", error);
+                }
+            }
+        }
+
+        function toggleForm() {
+            const form = document.getElementById("addDoctorForm");
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+
+        document.getElementById("doctorForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById("name").value,
+                specialty: document.getElementById("specialty").value,
+                location: document.getElementById("location").value,
+                experience: document.getElementById("experience").value,
+                phone_number: document.getElementById("phone_number").value,
+                area_of_interest: document.getElementById("area_of_interest").value
+            };
+
+            try {
+                const response = await fetch("/admin/add-doctor", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Doctor added successfully!");
+                    window.location.reload(); // Refresh the list
+                } else {
+                    alert("Error adding doctor.");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Something went wrong!");
+            }
+        });
+
+        async function deleteDoctor(doctorId) {
+            if (confirm("Are you sure you want to delete this doctor?")) {
+                try {
+                    const response = await fetch(`/admin/delete-doctor/${doctorId}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert("Doctor deleted successfully!");
+                        window.location.reload();
+                    } else {
+                        alert("Failed to delete doctor.");
+                    }
+                } catch (error) {
+                    console.error("Error deleting doctor:", error);
+                }
+            }
+        }
+    </script>
+    </body>
+</html>
