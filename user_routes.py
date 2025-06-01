@@ -4,6 +4,7 @@ import mysql.connector
 import pickle
 import re
 import numpy as np
+from datetime import datetime
 
 # Load the model, scaler, and label encoder
 with open('models/depression_model.pkl', 'rb') as file:
@@ -22,6 +23,96 @@ risk_level_map = {
     'Moderate Depression': 'Moderate',
     'Moderately Severe Depression': 'High',
     'Severe Depression': 'Very High'
+}
+
+# Define severity weights for different risk levels
+severity_weights = {
+    'Minimal': 1,
+    'Low': 2,
+    'Moderate': 3,
+    'High': 4,
+    'Very High': 5
+}
+
+# Define specialty weights based on severity
+specialty_weights = {
+    'Psychiatrist': {
+        'Very High': 100,
+        'High': 90,
+        'Moderate': 80,
+        'Low': 70,
+        'Minimal': 60
+    },
+    'Clinical Psychologist': {
+        'Very High': 90,
+        'High': 85,
+        'Moderate': 75,
+        'Low': 65,
+        'Minimal': 55
+    },
+    'Psychologist': {
+        'Very High': 80,
+        'High': 75,
+        'Moderate': 70,
+        'Low': 60,
+        'Minimal': 50
+    },
+    'Therapist': {
+        'Very High': 70,
+        'High': 65,
+        'Moderate': 60,
+        'Low': 55,
+        'Minimal': 45
+    },
+    'Counselor': {
+        'Very High': 60,
+        'High': 55,
+        'Moderate': 50,
+        'Low': 45,
+        'Minimal': 40
+    }
+}
+
+# Define location weights based on distance (assuming major cities as hubs)
+location_weights = {
+    'exact_match': 100,
+    'nearby_city': 80,
+    'major_city': 60,
+    'other_city': 40
+}
+
+# Define location fallback mapping based on geographical proximity
+location_fallback_map = {
+    # Central Region
+    'hetauda': ['Kathmandu', 'Bhaktapur', 'Lalitpur'],
+    'bharatpur': ['Kathmandu', 'Bhaktapur', 'Pokhara'],
+    'panauti': ['Bhaktapur', 'Kathmandu', 'Lalitpur'],
+    'bidur': ['Kathmandu', 'Bhaktapur', 'Lalitpur'],
+    'dharan': ['Biratnagar', 'Kathmandu'],
+    'dhankuta': ['Biratnagar', 'Kathmandu'],
+    'birgunj': ['Kathmandu', 'Bhaktapur'],
+    'janakpur': ['Biratnagar', 'Kathmandu'],
+    'gaur': ['Birgunj', 'Kathmandu'],
+    'malangwa': ['Birgunj', 'Kathmandu'],
+    'kalaiya': ['Birgunj', 'Kathmandu'],
+    
+    # Western Region
+    'butwal': ['Pokhara', 'Kathmandu'],
+    'bhairahawa': ['Butwal', 'Pokhara'],
+    'tansen': ['Butwal', 'Pokhara'],
+    'gorkha': ['Pokhara', 'Kathmandu'],
+    'damauli': ['Pokhara', 'Kathmandu'],
+    'syangja': ['Pokhara', 'Butwal'],
+    'waling': ['Pokhara', 'Butwal'],
+    
+    # Eastern Region
+    'ilam': ['Biratnagar', 'Kathmandu'],
+    'damak': ['Biratnagar', 'Kathmandu'],
+    'mechinagar': ['Biratnagar', 'Kathmandu'],
+    'bhadrapur': ['Biratnagar', 'Kathmandu'],
+    
+    # Default fallback for unknown locations
+    'default': ['Kathmandu', 'Pokhara', 'Biratnagar']
 }
 
 user_bp = Blueprint("user", __name__, "/")
@@ -325,10 +416,10 @@ def submit_questionnaire():
     name = request.form['name']
     age = request.form['age']
     gender = request.form['gender']
-    location = request.form['location']
+    location = request.form['location'].lower()  # Convert to lowercase for matching
     interest = request.form['interest']
 
-    # Store additional user info in session (optional)
+    # Store additional user info in session
     session['user_info'] = {
         'name': name,
         'age': age,
@@ -337,17 +428,13 @@ def submit_questionnaire():
         'interest': interest
     }
 
-    # ✅ Get score from session
+    # Get score from session
     total_score = session.get('total_score')
 
     if total_score is None:
         return "Test score not found. Please retake the test.", 400
-    
-    # Convert total_score to standard Python int if it's numpy type
-    total_score = int(total_score)
-    
+
     try:
-        # Use the ML model to predict depression level
         # Scale the input using the loaded scaler
         scaled_score = scaler.transform([[total_score]])
         
@@ -360,7 +447,7 @@ def submit_questionnaire():
         # Get risk level from mapping
         risk_level = risk_level_map[result]
         
-        # ✅ Store result in database
+        # Store result in database
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(
@@ -374,54 +461,100 @@ def submit_questionnaire():
         # Get recommended doctors based on assessment and interest
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
+
+        # Get fallback locations for the user's location
+        fallback_locations = location_fallback_map.get(location.lower(), location_fallback_map['default'])
         
-        # Query doctors that match the patient's mental health interest and location
-        cursor.execute("""
+        # Create the location condition for the SQL query
+        location_conditions = ' OR '.join(['location = %s' for _ in fallback_locations])
+        location_in_clause = ', '.join(['%s' for _ in fallback_locations])
+        
+        # Query to get all potential doctors
+        query = f"""
+            WITH doctor_scores AS (
+                SELECT 
+                    name, specialty, location, experience, phone_number, area_of_interest,
+                    CASE 
+                        WHEN location = %s THEN {location_weights['exact_match']}
+                        WHEN location IN ({location_in_clause}) THEN 
+                            CASE 
+                                WHEN location IN ('Kathmandu', 'Pokhara', 'Biratnagar') THEN {location_weights['major_city']}
+                                ELSE {location_weights['nearby_city']}
+                            END
+                        ELSE {location_weights['other_city']}
+                    END as location_score,
+                    CASE
+                        WHEN experience >= 15 THEN 100
+                        WHEN experience >= 10 THEN 80
+                        WHEN experience >= 5 THEN 60
+                        ELSE 40
+                    END as experience_score,
+                    CASE
+                        WHEN area_of_interest LIKE %s THEN 100
+                        WHEN area_of_interest LIKE '%General%' THEN 60
+                        ELSE 40
+                    END as interest_score
+                FROM doctors 
+                WHERE (location = %s OR {location_conditions})
+            )
             SELECT 
                 name, specialty, location, experience, phone_number, area_of_interest,
                 CASE 
-                    WHEN location = %s AND area_of_interest = %s THEN 'Perfect match'
-                    WHEN location = %s THEN 'Location match'
-                    WHEN area_of_interest = %s THEN 'Interest match'
-                    ELSE 'General match'
-                END as match_type
-            FROM doctors 
-            WHERE (area_of_interest = %s OR area_of_interest = 'General') 
-            AND (location = %s OR location LIKE %s)
-            ORDER BY 
-                CASE 
-                    WHEN area_of_interest = %s THEN 1
-                    WHEN area_of_interest = 'General' THEN 2
-                    ELSE 3
-                END,
-                CASE 
-                    WHEN location = %s THEN 1
-                    ELSE 2
-                END
-        """, (location, interest, location, interest, interest, location, f"%{location}%", interest, location))
+                    WHEN location = %s THEN 'In your city'
+                    ELSE CONCAT('Available in ', location)
+                END as match_type,
+                (
+                    location_score * 0.3 + 
+                    experience_score * 0.2 + 
+                    interest_score * 0.3 +
+                    CASE 
+                        WHEN specialty = 'Psychiatrist' THEN {specialty_weights['Psychiatrist'][risk_level]} * 0.2
+                        WHEN specialty = 'Clinical Psychologist' THEN {specialty_weights['Clinical Psychologist'][risk_level]} * 0.2
+                        WHEN specialty = 'Psychologist' THEN {specialty_weights['Psychologist'][risk_level]} * 0.2
+                        WHEN specialty = 'Therapist' THEN {specialty_weights['Therapist'][risk_level]} * 0.2
+                        ELSE {specialty_weights['Counselor'][risk_level]} * 0.2
+                    END
+                ) as total_score
+            FROM doctor_scores
+            ORDER BY total_score DESC
+            LIMIT 10
+        """
         
+        # Create parameters list
+        params = [
+            location,  # For location score CASE
+            *fallback_locations,  # For location IN clause
+            f"%{interest}%",  # For interest score LIKE
+            location,  # For WHERE location = 
+            *fallback_locations,  # For WHERE location IN
+            location,  # For match_type CASE
+        ]
+        
+        cursor.execute(query, params)
         doctors = cursor.fetchall()
         cursor.close()
         conn.close()
 
-        # Format doctor information for display
+        # Format doctor information for display with match explanation and score
         doctor_list = []
         for doc in doctors:
+            match_percentage = round((doc['total_score'] / 100) * 100)
             doctor_info = f"{doc['name']} - {doc['specialty']}\n"
             doctor_info += f"Location: {doc['location']}\n"
-            doctor_info += f"Experience: {doc['experience']}\n"
+            doctor_info += f"Experience: {doc['experience']} years\n"
             doctor_info += f"Area of Interest: {doc['area_of_interest']}\n"
             doctor_info += f"Contact: {doc['phone_number']}\n"
-            doctor_info += f"Match Type: {doc['match_type']}"
+            doctor_info += f"Match Quality: {doc['match_type']} ({match_percentage}% match)"
             doctor_list.append(doctor_info)
 
-        # ✅ Render result page with doctors
+        # Render result page with doctors
         return render_template('result.html', 
                             score=total_score, 
                             result=result, 
                             risk_level=risk_level, 
                             doctors=doctor_list,
-                            user_info=session['user_info'])
+                            user_info=session['user_info'],
+                            current_date=datetime.now().strftime('%B %d, %Y'))
         
     except Exception as e:
         print(f"Error in prediction: {str(e)}")
