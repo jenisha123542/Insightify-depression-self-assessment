@@ -3,23 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Depression Insight</title>
+    <title>Admin Login - Insightify</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
-
 </head>
 <body class="admin-login">
-    <div class="container">
-        <h2>Admin Login</h2>
-        <form id="adminLoginForm">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+                <h2>Admin Login</h2>
+            </div>
+            <form id="adminLoginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+                </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                </div>
 
-            <button type="submit">Login</button>
-        </form>
-        <p id="error-message" style="color: red; display: none;"></p>
+                <button type="submit">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            <div id="error-message" class="login-error"></div>
+        </div>
     </div>
 
     <script>
@@ -29,7 +46,8 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('error-message');
-            errorMsg.style.display = 'none';
+            errorMsg.textContent = '';
+            errorMsg.classList.remove('visible');
 
             try {
                 const response = await fetch('http://127.0.0.1:5001/admin/admin_login', {
@@ -51,16 +69,15 @@
 
                 const result = await response.json();
                 
-                if (result.success)
-                 { console.log(result)
+                if (result.success) {
                     window.location.href = "admin_dashboard";
                 } else {
                     throw new Error(result.error || 'Login failed');
                 }
             } catch (error) {
                 console.error('Login Error:', error);
-                errorMsg.innerText = error.message;
-                errorMsg.style.display = 'block';
+                errorMsg.textContent = error.message;
+                errorMsg.classList.add('visible');
             }
         });
     </script>

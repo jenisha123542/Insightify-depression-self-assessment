@@ -3,41 +3,302 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Admin Dashboard - Depression Insight</title>
-    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet"/>
+    <title>Admin Dashboard - Insightify</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #4A6FA5;
+            --secondary-color: #98C1D9;
+            --accent-color: #2A9D8F;
+            --light-color: #F5F7FA;
+            --dark-color: #333F48;
+            --text-color: #333F48;
+            --light-text: #F5F7FA;
+            --border-radius: 6px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #444;
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styles */
+        header {
+            height: 85px;
+            background: linear-gradient(135deg, #2c3e50, #1a4a3c);
+            padding: 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 70px;
+            width: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .logo img:hover {
+            transform: scale(1.05);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: white;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Notification Badge */
+        .notification {
+            position: relative;
+            cursor: pointer;
+            margin-right: 0;
+        }
+
+        .notification i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .badge {
+            position: absolute;
+            top: -3px;
+            right: -5px;
+            background-color: #f44336;
+            color: white;
+            font-size: 11px;
+            padding: 1px 5px;
+            border-radius: 50%;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 0 0 2px #ffffff;
+        }
+
+        #logoutBtn {
+            background-color: transparent;
+            border: 2px solid #F4A460;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        #logoutBtn:hover {
+            background-color: #F4A460;
+            color: #2c3e50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Content Styles */
+        main {
+            flex: 1;
+            padding: 1.5rem 2rem;
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: var(--dark-color);
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        th:first-child {
+            border-top-left-radius: var(--border-radius);
+        }
+
+        th:last-child {
+            border-top-right-radius: var(--border-radius);
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Button Styles */
+        .delete-btn {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            justify-content: flex-start;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            color: var(--dark-color);
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .quick-actions {
+                justify-content: flex-start;
+                gap: 0.5rem;
+            }
+
+            .action-button {
+                min-width: calc(50% - 0.5rem);
+            }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="logo">
-            <img src="{{ url_for('static', filename='img/insightify.JPG') }}" alt="Insightify Logo"/>
+            <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo"/>
         </div>
-        <h1>Admin Dashboard</h1>
-
-        <div class="notification" onclick="window.location.href='{{ url_for('admin.admin_contact') }}'">
-            <i class="fas fa-bell"></i>
-            {% if unread_count > 0 %}
-            <span class="badge">{{ unread_count }}</span>
-            {% endif %}
+        <h1>Registered Users</h1>
+        
+        <div class="header-controls">
+            <div class="notification" onclick="window.location.href='{{ url_for('admin.admin_contact') }}'">
+                <i class="fas fa-bell"></i>
+                {% if unread_count > 0 %}
+                <span class="badge">{{ unread_count }}</span>
+                {% endif %}
+            </div>
+            <button id="logoutBtn">Logout</button>
         </div>
-        
-        
-        <button id="logoutBtn">Logout</button>
-
-        
     </header>
 
-    <nav>
-        <ul>
-            <li><a href="/admin/admin_dashboard" class="active">Dashboard</a></li>
-            <li><a href="/admin/users">Registered Users</a></li>
-            <li><a href="resultsmgmt.html">Test Results</a></li>
-            <li><a href="/admin/doctors">Doctor Recommendations</a></li>
-            <li><a href="/admin/messages">Messages</a></li>
-        </ul>
-    </nav>
     <main>
+        <div class="quick-actions">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="action-button">
+                <i class="fas fa-chart-line"></i>
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin.resultsmgmt') }}" class="action-button">
+                <i class="fas fa-clipboard-list"></i>
+                Test Results
+            </a>
+            <a href="/admin/doctors" class="action-button">
+                <i class="fas fa-user-md"></i>
+                Doctor Recommendations
+            </a>
+            <a href="/admin/messages" class="action-button">
+                <i class="fas fa-envelope"></i>
+                Messages
+            </a>
+        </div>
+
         <h2>Manage Users</h2>
         <table>
             <thead>
@@ -50,7 +311,6 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Loop through users passed from Flask -->
                 {% for user in users %}
                 <tr>
                     <td>{{ user.id }}</td>
@@ -70,7 +330,6 @@
 
     <script>
         // Logout functionality
-       
         document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
         const response = await fetch('/admin/admin-logout');  // Send a request to the logout route
@@ -105,7 +364,6 @@
         }
     }
 }
-
     </script>
 </body>
 </html>

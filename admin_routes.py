@@ -320,4 +320,30 @@ def delete_message(message_id):
         if cursor: cursor.close()
         if connection: connection.close()
 
+@admin_bp.route('/resultsmgmt')
+def resultsmgmt():
+    try:
+        # Connect to the database
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        
+        # Get unread messages count
+        unread_count = get_unread_count()
+        
+        # Get test results data (you can modify this query based on your needs)
+        cursor.execute("SELECT * FROM results")
+        results = cursor.fetchall()
+        
+        return render_template('resultsmgmt.html', results=results, unread_count=unread_count)
+    
+    except Exception as e:
+        print(f"Error fetching results: {e}")
+        return render_template('resultsmgmt.html', results=[], unread_count=0)
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
 
