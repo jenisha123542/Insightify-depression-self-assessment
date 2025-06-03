@@ -279,6 +279,169 @@ button:hover {
         min-width: calc(50% - 0.5rem);
     }
 }
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content {
+    background-color: white;
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: slideIn 0.3s ease;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 20px;
+    max-height: calc(100vh - 200px);
+}
+
+.modal-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+/* Scrollbar Styles */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.1);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Add Doctor Button */
+.add-doctor-btn {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.add-doctor-btn i {
+    font-size: 1.1rem;
+}
+
+.add-doctor-btn:hover {
+    background-color: #248277;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
         </style>
 
     </head>
@@ -321,7 +484,54 @@ button:hover {
         </div>
 
         <h2>Manage Doctor List</h2>
-        <button onclick="toggleForm()">Add Doctor</button>
+        <button class="add-doctor-btn" onclick="toggleForm()">
+            <i class="fas fa-user-md"></i>
+            Add Doctor
+        </button>
+
+        <!-- Modal Form -->
+        <div id="addDoctorForm" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="toggleForm()">&times;</span>
+                <h3 style="margin-bottom: 1.5rem; color: var(--dark-color);">Add New Doctor</h3>
+                <div class="modal-body">
+                    <form id="doctorForm">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required placeholder="Enter doctor's name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="specialty">Specialty</label>
+                            <input type="text" id="specialty" name="specialty" required placeholder="e.g., Psychiatrist, Psychologist">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" required placeholder="City, State">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="experience">Experience (years)</label>
+                            <input type="number" id="experience" name="experience" required placeholder="Years of experience">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone_number">Phone Number</label>
+                            <input type="tel" id="phone_number" name="phone_number" required placeholder="Contact number">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="area_of_interest">Area of Interest</label>
+                            <input type="text" id="area_of_interest" name="area_of_interest" required placeholder="e.g., Depression, Anxiety">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="submit-btn" form="doctorForm">Add Doctor</button>
+                </div>
+            </div>
+        </div>
 
         <table>
             <thead>
@@ -356,31 +566,6 @@ button:hover {
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Hidden form to add doctor -->
-<div id="addDoctorForm" style="display: none; margin-top: 20px;">
-    <form id="doctorForm">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-
-        <label for="specialty">Specialty:</label>
-        <input type="text" id="specialty" name="specialty" required>
-
-        <label for="location">Location:</label>
-        <input type="text" id="location" name="location" required>
-
-        <label for="experience">Experience:</label>
-        <input type="text" id="experience" name="experience" required>
-
-        <label for="phone_number">Phone Number:</label>
-        <input type="tel" id="phone_number" name="phone_number" required>
-
-        <label for="area_of_interest">Area of Interest:</label>
-        <input type="text" id="area_of_interest" name="area_of_interest" required>
-
-        <button type="submit">Submit</button>
-    </form>
-</div>
 
     </main>
 
@@ -427,8 +612,14 @@ button:hover {
         }
 
         function toggleForm() {
-            const form = document.getElementById("addDoctorForm");
-            form.style.display = form.style.display === "none" ? "block" : "none";
+            const modal = document.getElementById("addDoctorForm");
+            if (modal.style.display === "none" || !modal.style.display) {
+                modal.style.display = "block";
+                // Reset form when opening
+                document.getElementById("doctorForm").reset();
+            } else {
+                modal.style.display = "none";
+            }
         }
 
         document.getElementById("doctorForm").addEventListener("submit", async function (e) {
@@ -487,6 +678,19 @@ button:hover {
                 }
             }
         }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById("addDoctorForm");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        // Prevent modal close when clicking inside the form
+        document.querySelector('.modal-content').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
     </script>
     </body>
 </html>

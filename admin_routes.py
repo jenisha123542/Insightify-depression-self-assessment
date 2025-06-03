@@ -102,27 +102,93 @@ def admin_dashboard():
 @admin_bp.route('/get-stats')
 def get_stats():
     try:
+        print("Connecting to database...")
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
+        # First, let's check what columns exist in the users table
+        cursor.execute("DESCRIBE users")
+        user_columns = [row[0] for row in cursor.fetchall()]
+        print("Available columns in users table:", user_columns)
+
+        # First get total users (this should work regardless of columns)
         cursor.execute("SELECT COUNT(*) FROM users")
         total_users = cursor.fetchone()[0]
+        print(f"Total users: {total_users}")
 
-        print("Total users from DB:", total_users)  # Debug print
+        # Get total tests
+        cursor.execute("SELECT COUNT(*) FROM results")
+        total_tests = cursor.fetchone()[0]
+        print(f"Total tests: {total_tests}")
+
+        # Get severe cases
+        cursor.execute("SELECT COUNT(*) FROM results WHERE total_score > 20")
+        severe_cases = cursor.fetchone()[0]
+        print(f"Severe cases: {severe_cases}")
+
+        # For monthly changes, we need to check what date column is available
+        cursor.execute("DESCRIBE users")
+        user_date_column = next((col[0] for col in cursor.fetchall() if 'date' in col[0].lower() or 'created' in col[0].lower()), 'date_registered')
+        
+        cursor.execute("DESCRIBE results")
+        test_date_column = next((col[0] for col in cursor.fetchall() if 'date' in col[0].lower()), 'created_at')
+
+        # Get monthly changes using the correct column names
+        monthly_query = f"""
+            SELECT 
+                (SELECT COUNT(*) FROM users WHERE {user_date_column} >= DATE_SUB(NOW(), INTERVAL 1 MONTH)) as new_users,
+                (SELECT COUNT(*) FROM results WHERE {test_date_column} >= DATE_SUB(NOW(), INTERVAL 1 MONTH)) as new_tests,
+                (SELECT COUNT(*) FROM results WHERE total_score > 20 AND {test_date_column} >= DATE_SUB(NOW(), INTERVAL 1 MONTH)) as new_severe
+        """
+        print("Monthly query:", monthly_query)
+        cursor.execute(monthly_query)
+        monthly_stats = cursor.fetchone()
+        print(f"Monthly changes: {monthly_stats}")
 
         stats = {
-            'total_users': total_users
+            'total_users': total_users,
+            'total_tests': total_tests,
+            'severe_cases': severe_cases,
+            'monthly_changes': {
+                'users': monthly_stats[0] if monthly_stats else 0,
+                'tests': monthly_stats[1] if monthly_stats else 0,
+                'severe': monthly_stats[2] if monthly_stats else 0
+            }
         }
 
+        print("Final stats:", stats)
         return jsonify({'success': True, 'stats': stats})
 
+    except mysql.connector.Error as e:
+        print(f"Database error in /get-stats: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Database error: {str(e)}',
+            'stats': {
+                'total_users': 0,
+                'total_tests': 0,
+                'severe_cases': 0,
+                'monthly_changes': {'users': 0, 'tests': 0, 'severe': 0}
+            }
+        })
     except Exception as e:
-        print("Error in /get-stats:", e)
-        return jsonify({'success': False, 'message': str(e)})
-
+        print(f"Unexpected error in /get-stats: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Server error: {str(e)}',
+            'stats': {
+                'total_users': 0,
+                'total_tests': 0,
+                'severe_cases': 0,
+                'monthly_changes': {'users': 0, 'tests': 0, 'severe': 0}
+            }
+        })
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor: 
+            cursor.close()
+        if connection: 
+            connection.close()
+        print("Database connection closed")
 
 @admin_bp.route('/users')
 def view_users():
@@ -154,13 +220,15 @@ def delete_user(user_id):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-        # Query to delete the user by id
+        # Delete the user safely
         cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
         connection.commit()
 
         return jsonify({'success': True, 'message': 'User deleted successfully!'})
 
     except Exception as e:
+        if connection:
+            connection.rollback()
         print(f"Error deleting user: {e}")
         return jsonify({'success': False, 'message': 'Error deleting user.'})
 
@@ -239,21 +307,36 @@ def delete_doctor(doctor_id):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
+        # Start transaction
+        cursor.execute("START TRANSACTION")
+
         # First verify the doctor exists
         cursor.execute("SELECT id FROM doctors WHERE id = %s", (doctor_id,))
         if not cursor.fetchone():
             return jsonify({'success': False, 'message': 'Doctor not found'}), 404
 
+        # Delete the doctor
         cursor.execute("DELETE FROM doctors WHERE id = %s", (doctor_id,))
-        connection.commit()
 
+        # Reset auto-increment and reorder IDs
+        cursor.execute("SET @counter = 0")
+        cursor.execute("UPDATE doctors SET id = (@counter := @counter + 1)")
+        cursor.execute("ALTER TABLE doctors AUTO_INCREMENT = 1")
+
+        # Commit transaction
+        connection.commit()
         return jsonify({'success': True, 'message': 'Doctor deleted successfully!'})
+
     except Exception as e:
+        if connection:
+            connection.rollback()
         print("Error deleting doctor:", e)
         return jsonify({'success': False, 'message': 'Failed to delete doctor'})
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @admin_bp.route('/messages', methods=['GET', 'POST'], endpoint='admin_contact')
 def messages():
@@ -309,16 +392,31 @@ def delete_message(message_id):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
 
-        cursor.execute("DELETE FROM messages WHERE id = %s", (message_id,))
-        connection.commit()
+        # Start transaction
+        cursor.execute("START TRANSACTION")
 
+        # Delete the message
+        cursor.execute("DELETE FROM messages WHERE id = %s", (message_id,))
+
+        # Reset auto-increment and reorder IDs
+        cursor.execute("SET @counter = 0")
+        cursor.execute("UPDATE messages SET id = (@counter := @counter + 1)")
+        cursor.execute("ALTER TABLE messages AUTO_INCREMENT = 1")
+
+        # Commit transaction
+        connection.commit()
         return jsonify({'success': True, 'message': 'Message deleted successfully!'})
+
     except Exception as e:
+        if connection:
+            connection.rollback()
         print("Error deleting message:", e)
         return jsonify({'success': False, 'message': 'Failed to delete message'})
     finally:
-        if cursor: cursor.close()
-        if connection: connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @admin_bp.route('/resultsmgmt')
 def resultsmgmt():
@@ -340,6 +438,101 @@ def resultsmgmt():
         print(f"Error fetching results: {e}")
         return render_template('resultsmgmt.html', results=[], unread_count=0)
     
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+@admin_bp.route('/get-trend-data')
+def get_trend_data():
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # Get all data grouped by month
+        query = """
+            SELECT 
+                DATE_FORMAT(created_at, '%b %Y') as month,
+                CASE 
+                    WHEN total_score <= 4 THEN 'Minimal or No Depression'
+                    WHEN total_score <= 9 THEN 'Mild Depression'
+                    WHEN total_score <= 14 THEN 'Moderate Depression'
+                    WHEN total_score <= 19 THEN 'Moderately Severe Depression'
+                    ELSE 'Severe Depression'
+                END as severity,
+                COUNT(*) as count
+            FROM results
+            GROUP BY 
+                DATE_FORMAT(created_at, '%b %Y'),
+                CASE 
+                    WHEN total_score <= 4 THEN 'Minimal or No Depression'
+                    WHEN total_score <= 9 THEN 'Mild Depression'
+                    WHEN total_score <= 14 THEN 'Moderate Depression'
+                    WHEN total_score <= 19 THEN 'Moderately Severe Depression'
+                    ELSE 'Severe Depression'
+                END
+            ORDER BY created_at ASC, severity ASC
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        # Process the results
+        months = []
+        data = {
+            'Minimal or No Depression': [],
+            'Mild Depression': [],
+            'Moderate Depression': [],
+            'Moderately Severe Depression': [],
+            'Severe Depression': []
+        }
+
+        # Initialize data structure
+        for row in results:
+            month = row[0]  # Now in format 'MMM YYYY'
+            if month not in months:
+                months.append(month)
+                # Add 0 for all categories in this month
+                for category in data:
+                    data[category].append(0)
+            
+            # Update the count for this category in this month
+            month_index = months.index(month)
+            severity = row[1]
+            count = row[2]
+            data[severity][month_index] = count
+
+        # Format the response
+        trends = {
+            'labels': months,
+            'minimal': data['Minimal or No Depression'],
+            'mild': data['Mild Depression'],
+            'moderate': data['Moderate Depression'],
+            'moderately_severe': data['Moderately Severe Depression'],
+            'severe': data['Severe Depression']
+        }
+
+        print("Generated trend data:", trends)  # Debug print
+
+        return jsonify({
+            'success': True,
+            'trends': trends
+        })
+
+    except Exception as e:
+        print(f"Error fetching trend data: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}',
+            'trends': {
+                'labels': [],
+                'minimal': [],
+                'mild': [],
+                'moderate': [],
+                'moderately_severe': [],
+                'severe': []
+            }
+        })
     finally:
         if cursor:
             cursor.close()

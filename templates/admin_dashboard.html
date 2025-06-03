@@ -236,6 +236,78 @@
                 min-width: calc(50% - 0.5rem);
             }
         }
+
+        /* Stats Grid Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin: 0.5rem 0;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #2ecc71;
+        }
+
+        .stat-change.positive {
+            color: #2ecc71;
+        }
+
+        .stat-change.negative {
+            color: #e74c3c;
+        }
+
+        .stat-change i {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -318,7 +390,7 @@
                 </div>
             </div>
 
-            <div class="stat-card">
+            <!-- <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-title">Active Doctors</h3>
                     <i class="fas fa-user-md stat-icon"></i>
@@ -328,7 +400,7 @@
                     <i class="fas fa-arrow-up"></i>
                     <span>2 new this month</span>
                 </div>
-            </div>
+            </div> -->
         </div>
 
         <div class="chart-container">
@@ -336,12 +408,20 @@
                 <h3 class="chart-title">Depression Test Results Trend</h3>
                 <div class="chart-legend">
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #4A6FA5"></div>
+                        <div class="legend-color" style="background: #2ecc71"></div>
+                        <span>Minimal</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db"></div>
                         <span>Mild</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #2A9D8F"></div>
+                        <div class="legend-color" style="background: #f1c40f"></div>
                         <span>Moderate</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e67e22"></div>
+                        <span>Moderately Severe</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #e74c3c"></div>
@@ -350,25 +430,6 @@
                 </div>
             </div>
             <canvas id="trendsChart"></canvas>
-        </div>
-
-        <div class="data-table">
-            <h3 class="chart-title" style="padding: 1rem;">Recent Activities</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>User</th>
-                        <th>Activity</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="recent-activities">
-                    <tr>
-                        <td colspan="4" class="loading">Loading activities...</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </main>
 
@@ -394,23 +455,109 @@
         // Load dashboard stats
         async function loadStats() {
             try {
+                console.log('Fetching stats...');
                 const response = await fetch('/admin/get-stats');
                 const data = await response.json();
+                console.log('Received stats data:', data);
                 
                 if (data.success) {
-                    document.getElementById('total-users').textContent = data.stats.total_users || 0;
-                    document.getElementById('total-tests').textContent = data.stats.total_tests || 0;
-                    document.getElementById('severe-cases').textContent = data.stats.severe_cases || 0;
-                    document.getElementById('active-doctors').textContent = data.stats.active_doctors || 0;
-                    
-                    // Initialize trend chart
-                    initTrendChart(data.stats.trends || []);
-                    
-                    // Load recent activities
-                    loadRecentActivities(data.stats.recent_activities || []);
+                    // Update total users
+                    const totalUsers = document.getElementById('total-users');
+                    totalUsers.textContent = data.stats.total_users.toLocaleString();
+                    console.log('Updated total users:', totalUsers.textContent);
+
+                    // Update total tests
+                    const totalTests = document.getElementById('total-tests');
+                    totalTests.textContent = data.stats.total_tests.toLocaleString();
+                    console.log('Updated total tests:', totalTests.textContent);
+
+                    // Update severe cases
+                    const severeCases = document.getElementById('severe-cases');
+                    severeCases.textContent = data.stats.severe_cases.toLocaleString();
+                    console.log('Updated severe cases:', severeCases.textContent);
+
+                    // Update monthly changes
+                    if (data.stats.monthly_changes) {
+                        const userChange = calculatePercentageChange(data.stats.monthly_changes.users, data.stats.total_users);
+                        const testChange = calculatePercentageChange(data.stats.monthly_changes.tests, data.stats.total_tests);
+                        const severeChange = calculatePercentageChange(data.stats.monthly_changes.severe, data.stats.severe_cases);
+
+                        console.log('Monthly changes:', {
+                            users: userChange,
+                            tests: testChange,
+                            severe: severeChange
+                        });
+
+                        updateChangeIndicator('total-users', userChange);
+                        updateChangeIndicator('total-tests', testChange);
+                        updateChangeIndicator('severe-cases', severeChange);
+                    } else {
+                        console.warn('No monthly changes data received');
+                    }
+                } else {
+                    console.error('Failed to load stats:', data.message);
+                    // Show error state in the UI
+                    document.querySelectorAll('.stat-value').forEach(el => {
+                        el.textContent = 'Error';
+                        el.style.color = '#e74c3c';
+                    });
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                // Show error state in the UI
+                document.querySelectorAll('.stat-value').forEach(el => {
+                    el.textContent = 'Error';
+                    el.style.color = '#e74c3c';
+                });
+            }
+        }
+
+        // Calculate percentage change
+        function calculatePercentageChange(newValue, total) {
+            if (!total || total === 0) return 0;
+            const change = ((newValue / total) * 100).toFixed(1);
+            console.log(`Calculating change: new=${newValue}, total=${total}, result=${change}%`);
+            return change;
+        }
+
+        // Update change indicator for a stat card
+        function updateChangeIndicator(elementId, percentage) {
+            console.log(`Updating change indicator for ${elementId}: ${percentage}%`);
+            const card = document.getElementById(elementId).closest('.stat-card');
+            const changeDiv = card.querySelector('.stat-change');
+            const icon = changeDiv.querySelector('i');
+            const span = changeDiv.querySelector('span');
+            
+            // Update icon and color based on percentage
+            if (percentage > 0) {
+                icon.className = 'fas fa-arrow-up';
+                changeDiv.classList.remove('negative');
+                changeDiv.classList.add('positive');
+            } else if (percentage < 0) {
+                icon.className = 'fas fa-arrow-down';
+                changeDiv.classList.remove('positive');
+                changeDiv.classList.add('negative');
+            } else {
+                icon.className = 'fas fa-minus';
+                changeDiv.classList.remove('positive', 'negative');
+            }
+            
+            span.textContent = `${Math.abs(percentage)}% this month`;
+        }
+
+        // Initialize trend chart with real data
+        async function loadTrendData() {
+            try {
+                const response = await fetch('/admin/get-trend-data');
+                const data = await response.json();
+                
+                if (data.success) {
+                    initTrendChart(data.trends);
+                } else {
+                    console.error('Failed to load trend data:', data.message);
+                }
+            } catch (error) {
+                console.error('Error loading trend data:', error);
             }
         }
 
@@ -420,25 +567,42 @@
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: trends.labels,
                     datasets: [
                         {
+                            label: 'Minimal',
+                            data: trends.minimal,
+                            borderColor: '#2ecc71',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
                             label: 'Mild',
-                            data: [65, 59, 80, 81, 56, 55],
-                            borderColor: '#4A6FA5',
-                            tension: 0.4
+                            data: trends.mild,
+                            borderColor: '#3498db',
+                            tension: 0.4,
+                            fill: false
                         },
                         {
                             label: 'Moderate',
-                            data: [28, 48, 40, 19, 86, 27],
-                            borderColor: '#2A9D8F',
-                            tension: 0.4
+                            data: trends.moderate,
+                            borderColor: '#f1c40f',
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Moderately Severe',
+                            data: trends.moderately_severe,
+                            borderColor: '#e67e22',
+                            tension: 0.4,
+                            fill: false
                         },
                         {
                             label: 'Severe',
-                            data: [10, 15, 8, 12, 7, 5],
+                            data: trends.severe,
                             borderColor: '#e74c3c',
-                            tension: 0.4
+                            tension: 0.4,
+                            fill: false
                         }
                     ]
                 },
@@ -447,52 +611,41 @@
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Cases'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
                         }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
                     }
                 }
             });
         }
 
-        // Load recent activities
-        function loadRecentActivities(activities) {
-            const tbody = document.getElementById('recent-activities');
-            if (!activities.length) {
-                tbody.innerHTML = '<tr><td colspan="4">No recent activities</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = activities.map(activity => `
-                <tr>
-                    <td>${activity.date}</td>
-                    <td>${activity.user}</td>
-                    <td>${activity.activity}</td>
-                    <td>
-                        <span class="status-badge ${activity.status.toLowerCase()}">
-                            ${activity.status}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // Initialize dashboard
-        window.addEventListener('DOMContentLoaded', loadStats);
-
-        // Search functionality
-        document.querySelector('.search-input').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            // Implement search functionality here
-        });
-
-        // Filter functionality
-        document.querySelector('.filter-dropdown').addEventListener('change', (e) => {
-            const filter = e.target.value;
-            // Implement filter functionality here
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing dashboard...');
+            loadStats();
+            loadTrendData();
         });
     </script>
 </body>
