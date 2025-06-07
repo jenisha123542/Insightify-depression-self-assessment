@@ -472,16 +472,6 @@ def submit_questionnaire():
         # Query to get all potential doctors
         query = f"""
             WITH doctor_scores AS (
-                SELECT 
-                    name, specialty, location, experience, phone_number, area_of_interest,
-                    CASE 
-                        WHEN location = %s THEN {location_weights['exact_match']}
-                        WHEN location IN ({location_in_clause}) THEN 
-                            CASE 
-                                WHEN location IN ('Kathmandu', 'Pokhara', 'Biratnagar') THEN {location_weights['major_city']}
-                                ELSE {location_weights['nearby_city']}
-                            END
-                        ELSE {location_weights['other_city']}
                     END as location_score,
                     CASE
                         WHEN experience >= 15 THEN 100

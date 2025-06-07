@@ -1,556 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Learn About Depression</title>
-<link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
-  <style>
-    
-/* Main Styles for Depression Information Website */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn About Depression - Insightify</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <style>
+        /* Main content styles */
+        /* Override header navigation styles to remove bullets */
+        body{
+          font-size: 16px;
+        }
+        header nav ul {
+            list-style: none;
+            padding-left: 0;
+            gap: 6px;
+            font-size: 14px;
+        }
 
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+        header nav ul li::before {
+            content: none;
+        }
 
-/* --- HEADER STYLES --- */
-header {
-    height: 80px;
-    background: linear-gradient(135deg, #2c3e50, #1a4a3c);
-    padding: 0 5%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
+        .page-heading.bar {
+            background: linear-gradient(135deg, #e8f4ff, #d0e8ff);
+            padding: 60px 0;
+            margin-bottom: 40px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
 
-.logo {
-    height: 100%;
-    display: flex;
-    align-items: center;
-}
+        .wrap.normal {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
 
-.logo img {
-    height: 82px;
-    width: auto;
-    transition: transform 0.3s ease;
-}
+        h1.entry-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.8rem;
+            color: #2a7db5;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+            position: relative;
+            display: inline-block;
+        }
 
-.logo img:hover {
-    transform: scale(1.05);
-}
+        h1.entry-title::after {
+            content: '';
+            display: block;
+            width: 60%;
+            height: 3px;
+            background: #4a90e2;
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
 
-header nav ul {
-    list-style: none;
-    display: flex;
-    gap: 24px;
-    align-items: center;
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-header nav ul li a {
-    text-decoration: none;
-    color: white;
-    font-size: 18px;
-    font-weight: 500;
-    position: relative;
-    transition: all 0.3s ease;
-    padding: 8px 0;
-}
+        .inner {
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-header nav ul li a:after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: #F4A460;
-    transition: width 0.3s ease;
-}
+        .inner:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
 
-header nav ul li a:hover {
-    color: #F4A460;
-}
+        h2 {
+            color: var(--dark-color);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
 
-header nav ul li a:hover:after {
-    width: 100%;
-}
-.auth button {
-    background-color: transparent;
-    border: 2px solid #F4A460;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--accent-color);
+            border-radius: 2px;
+        }
 
-.auth button:hover {
-    background-color: #F4A460;
-    color: #2c3e50;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            /* font-size: 1.1rem; */
+        }
 
-.logout button {
-    background-color: transparent;
-    border: 2px solid #F4A460;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
+        ul {
+            list-style: none;
+            padding-left: 1.5rem;
+        }
 
-.logout button:hover {
-    background-color: #F4A460;
-    color: #2c3e50;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        ul li {
+            position: relative;
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
 
+        ul li::before {
+            content: '•';
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
 
-a {
-    text-decoration: none;
-    color: #2a7db5;
-    transition: color 0.3s ease;
-}
+        .depression-test {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            border-left: 5px solid var(--accent-color);
+            margin: 2rem 0;
+        }
 
-a:hover {
-    color: #1a5a8a;
-}
+        .depression-test h3 {
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
 
-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f8f9fa;
-    padding: 0;
-    margin: 0;
-}
+        .depression-test p {
+            margin-bottom: 1.5rem;
+        }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
-}
+        .test-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(42, 157, 143, 0.2);
+        }
 
-.page-heading.bar {
-    background: linear-gradient(135deg, #e8f4ff, #d0e8ff);
-    padding: 60px 0;
-    margin-bottom: 40px;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(42, 157, 143, 0.3);
+            background: #248277;
+            color: white;
+        }
 
-.wrap.normal {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 0 20px;
-    text-align: center;
-}
+        @media (max-width: 768px) {
+            .page-heading.bar {
+                padding: 40px 0;
+            }
 
-h1.entry-title {
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.8rem;
-    color: #2a7db5;
-    margin: 0;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.3;
-    position: relative;
-    display: inline-block;
-}
+            h1.entry-title {
+                font-size: 2.2rem;
+            }
 
-h1.entry-title::after {
-    content: '';
-    display: block;
-    width: 60%;
-    height: 3px;
-    background: #4a90e2;
-    margin: 15px auto 0;
-    border-radius: 2px;
-}
+            .container {
+                padding: 15px;
+            }
 
-/* Typography */
-h2 {
-  font-size: 1.8rem;
-  /* color: #3498db; */
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
+            .inner {
+                padding: 1.5rem;
+            }
 
-p {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
+            h2 {
+                font-size: 1.5rem;
+            }
 
-/* Section Styling */
-.inner {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.inner:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* List Styling */
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  margin-bottom: 10px;
-  padding: 8px 0;
-  
-  transition: background-color 0.2s ease;
-}
-
-li:last-child {
-  border-bottom: none;
-}
-
-
-/* Link Styling */
-a {
-  text-decoration: none;
-  color: #3498db;
-  font-weight: 500;
-  display: block;
-  padding: 5px 10px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-}
-
-a:hover {
-  color: #2980b9;
-}
-
-/* Depression Test Section */
-.depression-test {
-  background-color: #eaf8ff;
-  padding: 25px;
-  border-left: 5px solid #3498db;
-  border-radius: 10px;
-  box-shadow: inset 0 0 15px rgba(52, 152, 219, 0.1);
-}
-
-.depression-test h2 {
-  color: #2980b9;
-}
-
-.depression-test p {
-  margin-bottom: 15px;
-  line-height: 1.8;
-}
-
-.depression-test strong {
-  color: #2980b9;
-}
-
-.depression-test a {
-  display: inline-block;
-  background-color: #3498db;
-  color: white;
-  padding: 12px 25px;
-  border-radius: 30px;
-  font-weight: bold;
-  margin: 10px 0;
-  text-align: center;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.depression-test a:hover {
-  background-color: #2980b9;
-  transform: scale(1.05);
-  padding-left: 25px;
-}
-
-.bubble-section {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 40px;
-      padding: 20px;
-    }
-    
-    .bubble-section h2 {
-      text-align: left;
-      margin-bottom: 25px;
-      color: #333;
-    }
-    
-    .bubble-list {
-      list-style-type: none;
-      padding: 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-    }
-    
-    .bubble-list li {
-      background: #f8f9fa;
-      border-radius: 25px;
-      padding: 12px 20px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      flex: 1 1 200px;
-      max-width: 250px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-    
-    .bubble-list li:nth-child(1) { background-color: #e3f2fd; }
-    .bubble-list li:nth-child(2) { background-color: #e8f5e9; }
-    .bubble-list li:nth-child(3) { background-color: #fff3e0; }
-    .bubble-list li:nth-child(4) { background-color: #f3e5f5; }
-    .bubble-list li:nth-child(5) { background-color: #e0f7fa; }
-   
-    .bubble-list li:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    }
-    
-    .bubble-list a {
-      color: #444;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 15px;
-    }
-    
-    .bubble-list a:hover {
-      color: #0066cc;
-    }
-    
-    @media (max-width: 600px) {
-      .bubble-list li {
-        flex-basis: 100%;
-        max-width: 100%;
-      }
-    }
-
-    .inner {
-      background-color: #f5f5f5;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      max-width: 600px;
-      margin: 0 auto;
-      font-family: Arial, sans-serif;
-    }
-    
-    inner.h2 {
-      color: #333;
-      border-bottom: 2px solid #4682B4;
-      padding-bottom: 10px;
-      margin-top: 0;
-    }
-    
-    inner.ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-    
-    inner.li {
-      margin-bottom: 8px;
-      position: relative;
-      padding-left: 20px;
-    }
-    
-    inner.li:before {
-      content: "→";
-      position: absolute;
-      left: 0;
-      color: #4682B4;
-    }
-    
-    inner.a {
-      color: #4682B4;
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-    
-    inner.a:hover {
-      color: #2B5A7E;
-      text-decoration: underline;
-    }
-
-    .cta {
-    text-align: center;
-    color: #333;
-    position: relative;
-    overflow: hidden;
-}
-
-
-.cta-button {
-    display: inline-block;
-    color: #2a7db5;
-    padding: 1rem 2.5rem;
-    border-radius: 50px;
-    font-weight: bold;
-    margin-top: 1.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.cta-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-    background-color: #2a7db5;
-    transition: width 0.3s ease;
-    z-index: -1;
-}
-
-.cta-button:hover {
-    color: #fff;
-    transform: translateY(-3px);
-    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
-}
-
-.cta-button:hover::before {
-    width: 100%;
-}
-
-.cta-button:active {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* @media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        padding: 1rem;
-    }
-    
-    .logo {
-        margin-bottom: 1rem;
-    }
-    
-    nav ul {
-        margin-bottom: 1rem;
-    }
-    
-    nav ul li {
-        margin-left: 1rem;
-        margin-right: 1rem;
-    }
-} */
- footer {
-    background-color: #2c3e50;
-    color: #ecf0f1;
-    text-align: center;
-    padding: 20px;
-}
-
-
-
-footer a {
-    color: #3498db;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-footer a:hover {
-    color: #2980b9;
-    text-decoration: underline;
-}
-
-
-  </style>
+            p, ul li {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="logo">
-  <a href="{{ url_for('user.index') }}">
-    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-  </a>
-</div>
+            <a href="{{ url_for('user.index') }}">
+                <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+            </a>
+        </div>
         
         <nav>
             <ul>
-                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
-                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
+                <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
                 <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
                 <li><a href="{{ url_for('user.about') }}">About</a></li>
                 <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
             </ul>
         </nav>
+
         <div class="auth">
-    {% if session.get('user_id') %}
-        <form action="{{ url_for('user.logout') }}" method="POST">
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
-        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
-    {% endif %}
-</div>
+            {% if session.get('user_id') %}
+                <form action="{{ url_for('user.logout') }}" method="POST">
+                    <button type="submit">Logout</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+                <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+            {% endif %}
+        </div>
     </header>
 
     <div class="page-heading bar">
-  <div class="wrap normal">
-    <h1 class="entry-title">Depression Information</h1>
+        <div class="wrap normal">
+            <h1 class="entry-title">Depression Information</h1>
+        </div>
     </div>
+
+    <div class="container">
+        <div class="inner">
+            <h2>What is Depression?</h2>
+            <p>Depression (major depressive disorder) is a common and serious medical illness that negatively affects how you feel, the way you think and how you act. Fortunately, it is also treatable.</p>
+            <p>Depression causes feelings of sadness and/or a loss of interest in activities you once enjoyed. It can lead to a variety of emotional and physical problems and can decrease your ability to function at work and at home.</p>
+        </div>
+
+        <div class="inner">
+            <h2>Common Symptoms</h2>
+            <ul>
+                <li>Feeling sad or having a depressed mood</li>
+                <li>Loss of interest or pleasure in activities once enjoyed</li>
+                <li>Changes in appetite — weight loss or gain unrelated to dieting</li>
+                <li>Trouble sleeping or sleeping too much</li>
+                <li>Loss of energy or increased fatigue</li>
+                <li>Increase in purposeless physical activity or slowed movements and speech</li>
+                <li>Feeling worthless or guilty</li>
+                <li>Difficulty thinking, concentrating or making decisions</li>
+                <li>Thoughts of death or suicide</li>
+            </ul>
+        </div>
+
+        <div class="inner">
+            <h2>When to Seek Help</h2>
+            <p>If you have been experiencing some of the following signs and symptoms most of the day, nearly every day, for at least two weeks, you may be suffering from depression:</p>
+            <ul>
+                <li>Persistent sad, anxious, or "empty" mood</li>
+                <li>Feelings of hopelessness, or pessimism</li>
+                <li>Irritability</li>
+                <li>Feelings of guilt, worthlessness, or helplessness</li>
+                <li>Decreased energy or fatigue</li>
+                <li>Difficulty concentrating, remembering, or making decisions</li>
+            </ul>
+        </div>
+
+        <div class="depression-test">
+            <h3>Take Our Depression Self-Assessment</h3>
+            <p>If you're concerned about depression, our self-assessment can help you understand your symptoms better. This test is completely confidential and takes only a few minutes to complete.</p>
+            <a href="{{ url_for('user.test') }}" class="test-button">Take the Test Now</a>
+        </div>
+
+        <div class="inner">
+            <h2>Treatment Options</h2>
+            <p>Depression is among the most treatable of mental disorders. Between 80% and 90% percent of people with depression eventually respond well to treatment. Almost all patients gain some relief from their symptoms.</p>
+            <ul>
+                <li>Medication</li>
+                <li>Psychotherapy</li>
+                <li>Cognitive Behavioral Therapy (CBT)</li>
+                <li>Lifestyle changes</li>
+                <li>Support groups</li>
+                <li>Alternative therapies</li>
+            </ul>
+        </div>
     </div>
 
-   <div class="bubble-section">
-    <h2>Popular Articles</h2>
-    <ul class="bubble-list">
-      <li><a href="#">I don't want to live, but I don't want to die.</a></li>
-      <li><a href="#">Am I depressed or just sad?</a></li>
-      <li><a href="#">I hate myself</a></li>
-      <li><a href="#">I think about death all the time</a></li>
-      <li><a href="#">I can't get over things that happened in the past</a></li>
-      
-    </ul>
-  </div>
-
-  <div class="inner">
-    <h2>Understanding Depression</h2>
-    <ul>
-      <li><a href="#">What is depression?</a></li>
-      <li><a href="#">What causes depression?</a></li>
-      <li><a href="#">Are there types of depression?</a></li>
-      <li><a href="#">Am I depressed or just sad?</a></li>
-      <li><a href="#">Types of intrusive thoughts</a></li>
-      <li><a href="#">What is depression really like?</a></li>
-    </ul>
-  </div>
-
-    <div class="cta">
-    <h2>Take a Depression Test</h2>
-    <p>For people experiencing overwhelming sadness or despair, low energy, or negative self-image.</p>
-     <a href="{{ url_for('user.test') }}" class="cta-button">Take the Test</a>
-    
-  </div>
-
-  <footer>
-    <p>&copy; 2025 Insightify. All rights reserved.</p>
-    <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms & Conditions</a></p>
-</footer>
+    <footer>
+        <p>&copy; 2025 Insightify. All rights reserved.</p>
+        <p><a href="{{ url_for('user.privacy') }}">Privacy Policy</a> | <a href="{{ url_for('user.terms') }}">Terms & Conditions</a></p>
+    </footer>
 </body>
 </html>
