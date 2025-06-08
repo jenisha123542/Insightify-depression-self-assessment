@@ -289,6 +289,97 @@ def login():
             cursor.close()
             conn.close()
 
+@user_bp.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash('Please login to access your profile', 'error')
+        return redirect(url_for('user.login'))
+    
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT fullname as name, email, age, gender 
+            FROM users 
+            WHERE id = %s
+        """, (session['user_id'],))
+        
+        user = cursor.fetchone()
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('user.login'))
+            
+        return render_template('profile.html', user=user)
+        
+    except mysql.connector.Error as err:
+        flash(f'An error occurred: {err}', 'error')
+        return redirect(url_for('user.index'))
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
+
+@user_bp.route('/update_profile', methods=['POST'])
+def update_profile():
+    if 'user_id' not in session:
+        flash('Please login to update your profile', 'error')
+        return redirect(url_for('user.login'))
+    
+    try:
+        name = request.form.get('name')
+        email = request.form.get('email')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not all([name, email]):
+            flash('Name and email are required', 'error')
+            return redirect(url_for('user.profile'))
+            
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # Check if email exists for other users
+        cursor.execute("""
+            SELECT id FROM users 
+            WHERE email = %s AND id != %s
+        """, (email, session['user_id']))
+        
+        if cursor.fetchone():
+            flash('Email already exists', 'error')
+            return redirect(url_for('user.profile'))
+            
+        # Update user information
+        if new_password and new_password == confirm_password:
+            # Update with new password
+            hashed_password = generate_password_hash(new_password)
+            cursor.execute("""
+                UPDATE users 
+                SET fullname = %s, email = %s, age = %s, gender = %s, password = %s
+                WHERE id = %s
+            """, (name, email, age, gender, hashed_password, session['user_id']))
+        else:
+            # Update without password change
+            cursor.execute("""
+                UPDATE users 
+                SET fullname = %s, email = %s, age = %s, gender = %s
+                WHERE id = %s
+            """, (name, email, age, gender, session['user_id']))
+            
+        conn.commit()
+        flash('Profile updated successfully', 'success')
+        
+    except mysql.connector.Error as err:
+        flash(f'An error occurred: {err}', 'error')
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+    return redirect(url_for('user.profile'))
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
