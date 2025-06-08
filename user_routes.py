@@ -191,13 +191,29 @@ def signup():
         if not data:
             return jsonify({'success': False, 'message': 'No data received'}), 400
 
+        # Get all form fields
         fullname = data.get('fullname', '').strip()
         email = data.get('email', '').lower().strip()
         password = data.get('password', '')
+        age = data.get('age')
+        gender = data.get('gender', '').strip()
+        location = data.get('location', '').strip()
+        interest = data.get('interest', '').strip()
 
-        # Field presence check
-        if not all([fullname, email, password]):
-            return jsonify({'success': False, 'message': 'All fields are required!'}), 400
+        # Required fields check
+        required_fields = {
+            'Full Name': fullname,
+            'Email': email,
+            'Password': password,
+            'Age': age,
+            'Gender': gender,
+            'Location': location,
+            'Area of Interest': interest
+        }
+        
+        missing_fields = [field for field, value in required_fields.items() if not value]
+        if missing_fields:
+            return jsonify({'success': False, 'message': f'Please fill in the following required fields: {", ".join(missing_fields)}'}), 400
 
         # Email format check
         email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
@@ -221,11 +237,11 @@ def signup():
         if cursor.fetchone():
             return jsonify({'success': False, 'message': 'Email already exists!'}), 400
 
-        # Insert new user
+        # Insert new user with all information
         hashed_pw = generate_password_hash(password)
         cursor.execute(
-            "INSERT INTO users (fullname, email, password) VALUES (%s, %s, %s)",
-            (fullname, email, hashed_pw)
+            "INSERT INTO users (fullname, email, password, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (fullname, email, hashed_pw, age, gender, location, interest)
         )
         conn.commit()
 
@@ -289,97 +305,6 @@ def login():
             cursor.close()
             conn.close()
 
-@user_bp.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        flash('Please login to access your profile', 'error')
-        return redirect(url_for('user.login'))
-    
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute("""
-            SELECT fullname as name, email, age, gender 
-            FROM users 
-            WHERE id = %s
-        """, (session['user_id'],))
-        
-        user = cursor.fetchone()
-        
-        if not user:
-            flash('User not found', 'error')
-            return redirect(url_for('user.login'))
-            
-        return render_template('profile.html', user=user)
-        
-    except mysql.connector.Error as err:
-        flash(f'An error occurred: {err}', 'error')
-        return redirect(url_for('user.index'))
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-
-@user_bp.route('/update_profile', methods=['POST'])
-def update_profile():
-    if 'user_id' not in session:
-        flash('Please login to update your profile', 'error')
-        return redirect(url_for('user.login'))
-    
-    try:
-        name = request.form.get('name')
-        email = request.form.get('email')
-        age = request.form.get('age')
-        gender = request.form.get('gender')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
-        if not all([name, email]):
-            flash('Name and email are required', 'error')
-            return redirect(url_for('user.profile'))
-            
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # Check if email exists for other users
-        cursor.execute("""
-            SELECT id FROM users 
-            WHERE email = %s AND id != %s
-        """, (email, session['user_id']))
-        
-        if cursor.fetchone():
-            flash('Email already exists', 'error')
-            return redirect(url_for('user.profile'))
-            
-        # Update user information
-        if new_password and new_password == confirm_password:
-            # Update with new password
-            hashed_password = generate_password_hash(new_password)
-            cursor.execute("""
-                UPDATE users 
-                SET fullname = %s, email = %s, age = %s, gender = %s, password = %s
-                WHERE id = %s
-            """, (name, email, age, gender, hashed_password, session['user_id']))
-        else:
-            # Update without password change
-            cursor.execute("""
-                UPDATE users 
-                SET fullname = %s, email = %s, age = %s, gender = %s
-                WHERE id = %s
-            """, (name, email, age, gender, session['user_id']))
-            
-        conn.commit()
-        flash('Profile updated successfully', 'success')
-        
-    except mysql.connector.Error as err:
-        flash(f'An error occurred: {err}', 'error')
-    finally:
-        if 'conn' in locals() and conn.is_connected():
-            cursor.close()
-            conn.close()
-            
-    return redirect(url_for('user.profile'))
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
@@ -417,30 +342,7 @@ def contact():
 @user_bp.route('/test')
 def test():
     if 'user_id' not in session:
-        return render_template_string('''
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            </head>
-            <body>
-                <script>
-                    // Wait until SweetAlert2 is loaded
-                    window.onload = function() {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Hold on!',
-                            text: 'You need to login to take the test.',
-                            confirmButtonText: 'Login Now',
-                            confirmButtonColor: '#0f2852'
-                        }).then(() => {
-                            window.location.href = "{{ url_for('user.login') }}";
-                        });
-                    }
-                </script>
-            </body>
-            </html>
-        ''')
+        return redirect(url_for('user.login'))
     
     try:
         conn = mysql.connector.connect(**db_config)
@@ -473,26 +375,94 @@ def test():
 
 @user_bp.route('/submit_test', methods=['POST'])
 def submit_test():
-    if 'user_id' not in session:
-        return redirect(url_for('user.login'))
+    try:
+        # Get the assessment type (self or others)
+        assessment_type = request.form.get('assessment_type')
+        
+        # Get all question responses
+        responses = []
+        for key in request.form:
+            if key.startswith('q'):
+                responses.append(int(request.form[key]))
+        
+        if len(responses) != 9:  # Assuming there are 9 questions
+            flash('Please answer all questions', 'error')
+            return redirect(url_for('user.test'))
 
-    user_id = session['user_id']
+        # Calculate the total score
+        score = sum(responses)
+        
+        # Store test results in session for processing
+        session['score'] = score
+        
+        if assessment_type == 'self' and 'user_id' in session:
+            try:
+                conn = mysql.connector.connect(**db_config)
+                cursor = conn.cursor(dictionary=True)
+                
+                cursor.execute("""
+                    SELECT fullname, age, gender, location, interest 
+                    FROM users 
+                    WHERE id = %s
+                """, (session['user_id'],))
+                
+                user_info = cursor.fetchone()
+                
+                if user_info:
+                    # Store user info in session
+                    session['user_info'] = {
+                        'fullname': user_info['fullname'],
+                        'age': user_info['age'],
+                        'gender': user_info['gender'],
+                        'location': user_info['location'],
+                        'interest': user_info['interest']
+                    }
+                    
+                    # Scale the input using the loaded scaler
+                    scaled_score = scaler.transform([[score]])
+                    
+                    # Make prediction using the model
+                    prediction = model.predict(scaled_score)[0]
+                    
+                    # Convert prediction back to label
+                    result = str(label_encoder.inverse_transform([prediction])[0])
+                    
+                    # Get risk level from mapping
+                    risk_level = risk_level_map[result]
+                    
+                    # Store result in database
+                    try:
+                        cursor.execute(
+                            'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                            (session['user_id'], score, result, risk_level, user_info['fullname'], user_info['age'], user_info['gender'], user_info['location'], user_info['interest'])
+                        )
+                        conn.commit()
+                    except Exception as e:
+                        print(f"Error storing result: {str(e)}")
 
-    # Collect answers and calculate total_score
-    answers = []
-    total_score = 0
-    for i in range(1, 10):
-        selected_option = request.form.get(f'q{i}')
-        if selected_option:
-            score = int(selected_option)
-            answers.append(score)
-            total_score += score
+                    # Store results in session
+                    session['result'] = result
+                    session['risk_level'] = risk_level
+                    
+                    # Redirect to result page
+                    return redirect(url_for('user.result'))
+                
+            except Exception as e:
+                print(f"Database error: {str(e)}")
+                flash('A database error occurred', 'error')
+                return redirect(url_for('user.test'))
+            finally:
+                if 'conn' in locals() and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+        
+        # For 'others' assessment or if user info not found
+        return redirect(url_for('user.phase2_questionnaire'))
 
-    # ✅ Store score in session
-    session['total_score'] = total_score
-
-    # Proceed to phase 2
-    return redirect(url_for('user.phase2_questionnaire'))
+    except Exception as e:
+        print(f"Error in submit_test: {str(e)}")
+        flash('An error occurred while processing your test', 'error')
+        return redirect(url_for('user.test'))
 
 
 @user_bp.route('/phase2', methods=['GET'])
@@ -512,7 +482,7 @@ def submit_questionnaire():
 
     # Store additional user info in session
     session['user_info'] = {
-        'name': name,
+        'fullname': name,
         'age': age,
         'gender': gender,
         'location': location,
@@ -520,14 +490,14 @@ def submit_questionnaire():
     }
 
     # Get score from session
-    total_score = session.get('total_score')
+    score = session.get('score')
 
-    if total_score is None:
+    if score is None:
         return "Test score not found. Please retake the test.", 400
 
     try:
         # Scale the input using the loaded scaler
-        scaled_score = scaler.transform([[total_score]])
+        scaled_score = scaler.transform([[score]])
         
         # Make prediction using the model
         prediction = model.predict(scaled_score)[0]
@@ -543,99 +513,18 @@ def submit_questionnaire():
         cursor = conn.cursor()
         cursor.execute(
             'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (session['user_id'], total_score, result, risk_level, name, age, gender, location, interest)
+            (session['user_id'], score, result, risk_level, name, age, gender, location, interest)
         )
         conn.commit()
         cursor.close()
         conn.close()
 
-        # Get recommended doctors based on assessment and interest
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-
-        # Get fallback locations for the user's location
-        fallback_locations = location_fallback_map.get(location.lower(), location_fallback_map['default'])
+        # Store results in session
+        session['result'] = result
+        session['risk_level'] = risk_level
         
-        # Create the location condition for the SQL query
-        location_conditions = ' OR '.join(['location = %s' for _ in fallback_locations])
-        location_in_clause = ', '.join(['%s' for _ in fallback_locations])
-        
-        # Query to get all potential doctors
-        query = f"""
-            WITH doctor_scores AS (
-                    END as location_score,
-                    CASE
-                        WHEN experience >= 15 THEN 100
-                        WHEN experience >= 10 THEN 80
-                        WHEN experience >= 5 THEN 60
-                        ELSE 40
-                    END as experience_score,
-                    CASE
-                        WHEN area_of_interest LIKE %s THEN 100
-                        WHEN area_of_interest LIKE '%General%' THEN 60
-                        ELSE 40
-                    END as interest_score
-                FROM doctors 
-                WHERE (location = %s OR {location_conditions})
-            )
-            SELECT 
-                name, specialty, location, experience, phone_number, area_of_interest,
-                CASE 
-                    WHEN location = %s THEN 'In your city'
-                    ELSE CONCAT('Available in ', location)
-                END as match_type,
-                (
-                    location_score * 0.3 + 
-                    experience_score * 0.2 + 
-                    interest_score * 0.3 +
-                    CASE 
-                        WHEN specialty = 'Psychiatrist' THEN {specialty_weights['Psychiatrist'][risk_level]} * 0.2
-                        WHEN specialty = 'Clinical Psychologist' THEN {specialty_weights['Clinical Psychologist'][risk_level]} * 0.2
-                        WHEN specialty = 'Psychologist' THEN {specialty_weights['Psychologist'][risk_level]} * 0.2
-                        WHEN specialty = 'Therapist' THEN {specialty_weights['Therapist'][risk_level]} * 0.2
-                        ELSE {specialty_weights['Counselor'][risk_level]} * 0.2
-                    END
-                ) as total_score
-            FROM doctor_scores
-            ORDER BY total_score DESC
-            LIMIT 10
-        """
-        
-        # Create parameters list
-        params = [
-            location,  # For location score CASE
-            *fallback_locations,  # For location IN clause
-            f"%{interest}%",  # For interest score LIKE
-            location,  # For WHERE location = 
-            *fallback_locations,  # For WHERE location IN
-            location,  # For match_type CASE
-        ]
-        
-        cursor.execute(query, params)
-        doctors = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
-        # Format doctor information for display with match explanation and score
-        doctor_list = []
-        for doc in doctors:
-            match_percentage = round((doc['total_score'] / 100) * 100)
-            doctor_info = f"{doc['name']} - {doc['specialty']}\n"
-            doctor_info += f"Location: {doc['location']}\n"
-            doctor_info += f"Experience: {doc['experience']} years\n"
-            doctor_info += f"Area of Interest: {doc['area_of_interest']}\n"
-            doctor_info += f"Contact: {doc['phone_number']}\n"
-            doctor_info += f"Match Quality: {doc['match_type']} ({match_percentage}% match)"
-            doctor_list.append(doctor_info)
-
-        # Render result page with doctors
-        return render_template('result.html', 
-                            score=total_score, 
-                            result=result, 
-                            risk_level=risk_level, 
-                            doctors=doctor_list,
-                            user_info=session['user_info'],
-                            current_date=datetime.now().strftime('%B %d, %Y'))
+        # Redirect to result page
+        return redirect(url_for('user.result'))
         
     except Exception as e:
         print(f"Error in prediction: {str(e)}")
@@ -659,6 +548,95 @@ def predict_depression():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@user_bp.route('/result')
+def result():
+    # Check if we have the required session data
+    if 'score' not in session:
+        return redirect(url_for('user.test'))
+    
+    # Get data from session
+    score = session.get('score')
+    user_info = session.get('user_info')
+    result = session.get('result')
+    risk_level = session.get('risk_level')
+    
+    if not all([score, user_info, result, risk_level]):
+        return redirect(url_for('user.test'))
+    
+    # Get recommended doctors based on assessment and interest
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # Get fallback locations for the user's location
+        location = user_info['location'].lower()
+        fallback_locations = location_fallback_map.get(location, location_fallback_map['default'])
+        
+        # Create the location condition for the SQL query
+        location_conditions = ' OR '.join(['location = %s' for _ in fallback_locations])
+        
+        # Query to get all potential doctors
+        query = f"""
+            SELECT 
+                name, specialty, location, experience, phone_number, area_of_interest,
+                CASE 
+                    WHEN location = %s THEN 'In your city'
+                    ELSE CONCAT('Available in ', location)
+                END as match_type,
+                CASE
+                    WHEN location = %s THEN 100
+                    WHEN location IN ({', '.join(['%s' for _ in fallback_locations])}) THEN 80
+                    ELSE 60
+                END as match_score
+            FROM doctors 
+            WHERE location = %s OR location IN ({', '.join(['%s' for _ in fallback_locations])})
+            ORDER BY match_score DESC
+            LIMIT 10
+        """
+        
+        # Create parameters list
+        params = [
+            location,  # For CASE WHEN location = %s
+            location,  # For CASE WHEN location = %s
+            *fallback_locations,  # For IN clause in match_score
+            location,  # For WHERE location = %s
+            *fallback_locations  # For WHERE location IN
+        ]
+        
+        cursor.execute(query, params)
+        doctors = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        # Format doctor information for display
+        doctor_list = []
+        for doc in doctors:
+            match_percentage = round(doc['match_score'])
+            doctor_info = f"{doc['name']} - {doc['specialty']}\n"
+            doctor_info += f"Location: {doc['location']}\n"
+            doctor_info += f"Experience: {doc['experience']} years\n"
+            doctor_info += f"Area of Interest: {doc['area_of_interest']}\n"
+            doctor_info += f"Contact: {doc['phone_number']}\n"
+            doctor_info += f"Match Quality: {doc['match_type']} ({match_percentage}% match)"
+            doctor_list.append(doctor_info)
+
+    except Exception as e:
+        print(f"Error fetching doctors: {str(e)}")
+        doctor_list = []
+    
+    # Clear session data after retrieving it
+    session.pop('score', None)
+    session.pop('user_info', None)
+    session.pop('result', None)
+    session.pop('risk_level', None)
+    
+    return render_template('result.html',
+                         score=score,
+                         result=result,
+                         risk_level=risk_level,
+                         user_info=user_info,
+                         doctors=doctor_list,
+                         current_date=datetime.now().strftime('%B %d, %Y'))
 
 # if __name__ == '__main__':
 #     user_bp.run(debug=True, host='0.0.0.0', port=5000)

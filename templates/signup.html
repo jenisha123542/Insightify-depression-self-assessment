@@ -17,6 +17,9 @@
             --light-text: #F5F7FA;
             --border-radius: 6px;
             --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --purple: #6B5DD3;
+            --light-purple: #8F84E8;
+            --disabled-color: #E0E0E0;
         }
 
         /* Base Styles */
@@ -44,19 +47,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             padding: 48px;
             width: 100%;
-            max-width: 440px;
+            max-width: 600px;
             position: relative;
-            overflow: hidden;
-        }
-
-        .signup-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
         }
 
         .logo-section {
@@ -71,90 +63,149 @@
         }
 
         h2 {
-            color: var(--dark-color);
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            color: var(--dark-color);;
+            font-size: 28px;
+            font-weight: 600;
             text-align: center;
-            margin-bottom: 32px;
-            position: relative;
+            margin-bottom: 16px;
         }
 
-        h2::after {
-            content: '';
-            display: block;
-            width: 40px;
-            height: 3px;
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
-            margin: 12px auto 0;
-            border-radius: 2px;
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 16px;
         }
 
-        form {
+        /* Progress Bar */
+        .progress-bar {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+            position: relative;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--disabled-color);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 2px;
+            background: var(--purple);
+            transform: translateY(-50%);
+            z-index: 2;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--disabled-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 3;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            background: var(--dark-color);
+            border-color: var(--dark-color);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: var(--dark-color);
+            border-color: var(--dark-color);
+            color: white;
+        }
+
+        .progress-step i {
+            font-size: 18px;
+        }
+
+        .progress-step-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
         }
 
         .form-group {
-            position: relative;
+            margin-bottom: 24px;
         }
 
         label {
             display: block;
-            text-align: left;
             margin-bottom: 8px;
-            color: var(--dark-color);
+            color: #333;
             font-weight: 500;
-            font-size: 14px;
         }
 
-        .input-with-icon {
-            position: relative;
-        }
-
-        .input-with-icon i {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #a0aec0;
-        }
-
-        input {
+        input, select {
             width: 100%;
-            padding: 14px 16px 14px 46px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 15px;
-            background-color: var(--light-color);
+            transition: all 0.3s ease;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
-            border-color: var(--primary-color);
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(107, 93, 211, 0.1);
         }
 
-        input::placeholder {
-            color: #a0aec0;
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
         }
 
         button {
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 8px;
+            padding: 12px 24px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            transition: all 0.3s ease;
         }
 
         button:hover {
@@ -162,63 +213,36 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        button:active {
-            background: linear-gradient(to right, var(--accent-color), var(--primary-color));
+        button.prev {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        button.prev:hover {
+            background: #e0e0e0;
         }
 
         .error-message {
             color: #dc2626;
             font-size: 14px;
-            text-align: center;
-            margin-top: 16px;
-            min-height: 20px;
-            padding: 8px;
-            border-radius: 8px;
-            background-color: rgba(220, 38, 38, 0.1);
+            margin-top: 4px;
             display: none;
         }
 
-        .error-message.visible {
-            display: block;
-        }
-
         .login-link {
-            margin-top: 24px;
-            font-size: 14px;
-            color: #64748b;
             text-align: center;
+            margin-top: 24px;
+            color: #666;
         }
 
         .login-link a {
             color: var(--primary-color);
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
+            font-weight: 500;
         }
 
         .login-link a:hover {
-            color: var(--accent-color);
-        }
-
-        @media (max-width: 480px) {
-            .signup-container {
-                padding: 32px 24px;
-                border-radius: 12px;
-            }
-            
-            h2 {
-                font-size: 22px;
-                margin-bottom: 24px;
-            }
-
-            input {
-                padding: 12px 16px 12px 40px;
-                font-size: 14px;
-            }
-
-            button {
-                padding: 14px;
-            }
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -226,50 +250,273 @@
     <div class="signup-container">
         <div class="logo-section">
             <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-            <h2>Create Account</h2>
+            <h2>SIGN UP YOUR USER ACCOUNT</h2>
+            <p class="subtitle">Fill all form fields to go next step</p>
         </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-step active" data-step="1">
+                <i class="fas fa-lock"></i>
+                <span class="progress-step-label">Account</span>
+            </div>
+            <div class="progress-step" data-step="2">
+                <i class="fas fa-user"></i>
+                <span class="progress-step-label">Personal</span>
+            </div>
+            <div class="progress-step" data-step="3">
+                <i class="fas fa-check"></i>
+                <span class="progress-step-label">Success</span>
+            </div>
+        </div>
+
         <form id="signup-form">
-            <div class="form-group">
-                <label for="fullname">Full Name</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="fullname" name="fullname" required placeholder="Enter your full name">
+            <!-- Step 1: Account Information -->
+            <div class="form-step active" data-step="1">
+                <h3>Account Information:</h3>
+                <div class="form-group">
+                    <label for="fullname">Full Name *</label>
+                    <input type="text" id="fullname" name="fullname" required>
+                    <div class="error-message" id="fullname-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="error-message" id="email-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required>
+                    <div class="error-message" id="password-error"></div>
+                </div>
+                <div class="buttons">
+                    <div></div>
+                    <button type="button" class="next" onclick="nextStep(1)">Next</button>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+            <!-- Step 2: Personal Information -->
+            <div class="form-step" data-step="2">
+                <h3>Personal Information:</h3>
+                <div class="form-group">
+                    <label for="display-fullname">Full Name</label>
+                    <input type="text" id="display-fullname" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age *</label>
+                    <input type="number" id="age" name="age" min="1" max="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender *</label>
+                    <select id="gender" name="gender" required>
+                        <option value="">--Select Gender--</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not">Prefer not to say</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location *</label>
+                    <input type="text" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="interest">Area of Interest *</label>
+                    <select id="interest" name="interest" required>
+                        <option value="">--Select an Area--</option>
+                        <option value="anxiety">Anxiety</option>
+                        <option value="depression">Depression</option>
+                        <option value="sleep">Sleep</option>
+                        <option value="stress">Stress</option>
+                        <option value="career">Career Stress</option>
+                        <option value="relationship">Relationship Issues</option>
+                        <option value="addiction">Addiction</option>
+                        <option value="wellness">Mental Wellness</option>
+                        <option value="grief">Grief</option>
+                        <option value="trauma">Trauma</option>
+                    </select>
+                </div>
+                <div class="buttons">
+                    <button type="button" class="prev" onclick="prevStep(2)">Previous</button>
+                    <button type="button" class="next" onclick="nextStep(2)">Next</button>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+            <!-- Step 3: Success -->
+            <div class="form-step" data-step="3">
+                <div style="text-align: center;">
+                    <i class="fas fa-check-circle" style="font-size: 48px; color: var(--dark-color); margin-bottom: 20px;"></i>
+                    <h3>Complete Registration</h3>
+                    <p style="margin: 20px 0;">Please review your information before submitting:</p>
+                    <div id="summary" style="text-align: left; margin: 20px 0;"></div>
+                    <div class="buttons" style="justify-content: center;">
+                        <button type="button" class="prev" onclick="prevStep(3)" style="margin-right: 10px;">Previous</button>
+                        <button type="submit">Complete Signup</button>
+                    </div>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
-                <div class="input-with-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="confirm-password" name="confirm-password" required placeholder="Confirm your password">
-                </div>
-            </div>
-
-            <button type="submit">
-                <i class="fas fa-user-plus"></i>
-                Sign Up
-            </button>
-            
-            <p class="error-message" id="errorMessage"></p>
-            <p class="login-link">Already have an account? <a href="/login">Login</a></p>
         </form>
+
+        <p class="login-link">Already have an account? <a href="{{ url_for('user.login') }}">Login here</a></p>
     </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function updateProgressBar() {
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.querySelector('.progress-bar').style.setProperty('--progress', `${progress}%`);
+            
+            // Update step indicators
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                const stepNum = index + 1;
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('completed', 'active');
+                }
+            });
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-step').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.querySelector(`.form-step[data-step="${step}"]`).classList.add('active');
+            currentStep = step;
+            updateProgressBar();
+
+            // If moving to step 2, update the displayed full name
+            if (step === 2) {
+                const fullname = document.getElementById('fullname').value;
+                document.getElementById('display-fullname').value = fullname;
+            }
+
+            // If moving to step 3, update the summary
+            if (step === 3) {
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const fields = {
+                'Full Name': 'fullname',
+                'Email': 'email',
+                'Age': 'age',
+                'Gender': 'gender',
+                'Location': 'location',
+                'Area of Interest': 'interest'
+            };
+
+            let summaryHTML = '';
+            for (const [label, id] of Object.entries(fields)) {
+                const value = document.getElementById(id).value;
+                if (id !== 'password') {
+                    summaryHTML += `<p><strong>${label}:</strong> ${value}</p>`;
+                }
+            }
+            summary.innerHTML = summaryHTML;
+        }
+
+        function validateStep(step) {
+            const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = currentStepElement.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                const errorDiv = document.getElementById(`${input.id}-error`);
+                if (!input.value) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = 'This field is required';
+                        errorDiv.style.display = 'block';
+                    }
+                } else if (input.id === 'email') {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(input.value)) {
+                        isValid = false;
+                        errorDiv.textContent = 'Please enter a valid email address';
+                        errorDiv.style.display = 'block';
+                    }
+                } else if (input.id === 'password') {
+                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,}$/;
+                    if (!passwordRegex.test(input.value)) {
+                        isValid = false;
+                        errorDiv.textContent = 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character';
+                        errorDiv.style.display = 'block';
+                    }
+                }
+            });
+
+            return isValid;
+        }
+
+        function nextStep(step) {
+            if (validateStep(step)) {
+                if (step < totalSteps) {
+                    showStep(step + 1);
+                }
+            }
+        }
+
+        function prevStep(step) {
+            if (step > 1) {
+                showStep(step - 1);
+            }
+        }
+
+        document.getElementById('signup-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect all form data
+            const formData = {
+                fullname: document.getElementById('fullname').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                age: document.getElementById('age').value,
+                gender: document.getElementById('gender').value,
+                location: document.getElementById('location').value,
+                interest: document.getElementById('interest').value
+            };
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Signup successful! Please login to continue.');
+                    window.location.href = '/login';
+                } else {
+                    // Show the error message in a more user-friendly way
+                    const errorMessage = result.message || 'Signup failed. Please try again.';
+                    alert(errorMessage);
+                    // If there's a specific field error, focus on that field
+                    if (errorMessage.includes('email')) {
+                        document.getElementById('email').focus();
+                    } else if (errorMessage.includes('password')) {
+                        document.getElementById('password').focus();
+                    }
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('An error occurred during signup. Please try again.');
+            }
+        });
+
+        // Initialize progress bar
+        updateProgressBar();
+    </script>
 </body>
 </html>

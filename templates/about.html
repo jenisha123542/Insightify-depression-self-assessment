@@ -588,21 +588,15 @@ p {
             </ul>
         </nav>
         <div class="auth">
-            {% if session.get('user_id') %}
-                <div class="profile-dropdown">
-                    <a class="profile-icon" onclick="toggleDropdown()">
-                        <i class="fas fa-user"></i>
-                    </a>
-                    <div class="dropdown-content" id="profileDropdown">
-                        <a href="{{ url_for('user.profile') }}">Edit Profile</a>
-                        <a href="{{ url_for('user.logout') }}">Logout</a>
-                    </div>
-                </div>
-            {% else %}
-                <a href="{{ url_for('user.login') }}"><button>Login</button></a>
-                <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
-            {% endif %}
-        </div>
+    {% if session.get('user_id') %}
+        <form action="{{ url_for('user.logout') }}" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    {% else %}
+        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+    {% endif %}
+</div>
     </header>
 
     <main>
