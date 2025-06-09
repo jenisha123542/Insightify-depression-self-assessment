@@ -5,6 +5,8 @@ import pickle
 import re
 import numpy as np
 from datetime import datetime
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the model, scaler, and label encoder
 with open('models/depression_model.pkl', 'rb') as file:
@@ -37,39 +39,39 @@ severity_weights = {
 # Define specialty weights based on severity
 specialty_weights = {
     'Psychiatrist': {
-        'Very High': 100,
-        'High': 90,
-        'Moderate': 80,
-        'Low': 70,
-        'Minimal': 60
+        'Very High': 1.0,
+        'High': 0.9,
+        'Moderate': 0.8,
+        'Low': 0.7,
+        'Minimal': 0.6
     },
     'Clinical Psychologist': {
-        'Very High': 90,
-        'High': 85,
-        'Moderate': 75,
-        'Low': 65,
-        'Minimal': 55
+        'Very High': 0.9,
+        'High': 0.85,
+        'Moderate': 0.8,
+        'Low': 0.7,
+        'Minimal': 0.6
     },
     'Psychologist': {
-        'Very High': 80,
-        'High': 75,
-        'Moderate': 70,
-        'Low': 60,
-        'Minimal': 50
+        'Very High': 0.8,
+        'High': 0.75,
+        'Moderate': 0.7,
+        'Low': 0.65,
+        'Minimal': 0.55
     },
     'Therapist': {
-        'Very High': 70,
-        'High': 65,
-        'Moderate': 60,
-        'Low': 55,
-        'Minimal': 45
+        'Very High': 0.7,
+        'High': 0.65,
+        'Moderate': 0.6,
+        'Low': 0.55,
+        'Minimal': 0.5
     },
     'Counselor': {
-        'Very High': 60,
-        'High': 55,
-        'Moderate': 50,
-        'Low': 45,
-        'Minimal': 40
+        'Very High': 0.6,
+        'High': 0.55,
+        'Moderate': 0.5,
+        'Low': 0.45,
+        'Minimal': 0.4
     }
 }
 
@@ -379,11 +381,37 @@ def submit_test():
         # Get the assessment type (self or others)
         assessment_type = request.form.get('assessment_type')
         
-        # Get all question responses
+        # Get all question responses and build symptoms list
         responses = []
-        for key in request.form:
-            if key.startswith('q'):
-                responses.append(int(request.form[key]))
+        symptoms = []
+        
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get questions text
+            cursor.execute("SELECT id, question_text FROM questions ORDER BY id")
+            questions = {q['id']: q['question_text'] for q in cursor.fetchall()}
+            
+            # Process responses and collect symptoms
+            for key in request.form:
+                if key.startswith('q'):
+                    q_id = int(key[1:])  # Extract question ID
+                    response_value = int(request.form[key])
+                    responses.append(response_value)
+                    
+                    # If response indicates presence of symptom (value > 0), add to symptoms
+                    if response_value > 0:
+                        symptom = questions.get(q_id, '').lower()
+                        if symptom:
+                            symptoms.append(symptom)
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Error getting questions: {str(e)}")
+            symptoms = []  # Reset symptoms on error
         
         if len(responses) != 9:  # Assuming there are 9 questions
             flash('Please answer all questions', 'error')
@@ -394,6 +422,7 @@ def submit_test():
         
         # Store test results in session for processing
         session['score'] = score
+        session['symptoms'] = ' '.join(symptoms)  # Store symptoms as space-separated string
         
         if assessment_type == 'self' and 'user_id' in session:
             try:
@@ -433,8 +462,8 @@ def submit_test():
                     # Store result in database
                     try:
                         cursor.execute(
-                            'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                            (session['user_id'], score, result, risk_level, user_info['fullname'], user_info['age'], user_info['gender'], user_info['location'], user_info['interest'])
+                            'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest, symptoms) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                            (session['user_id'], score, result, risk_level, user_info['fullname'], user_info['age'], user_info['gender'], user_info['location'], user_info['interest'], session['symptoms'])
                         )
                         conn.commit()
                     except Exception as e:
@@ -489,8 +518,9 @@ def submit_questionnaire():
         'interest': interest
     }
 
-    # Get score from session
+    # Get score and symptoms from session
     score = session.get('score')
+    symptoms = session.get('symptoms', '')
 
     if score is None:
         return "Test score not found. Please retake the test.", 400
@@ -512,8 +542,8 @@ def submit_questionnaire():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (session['user_id'], score, result, risk_level, name, age, gender, location, interest)
+            'INSERT INTO results (user_id, total_score, result, risk_level, name, age, gender, location, interest, symptoms) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+            (session['user_id'], score, result, risk_level, name, age, gender, location, interest, symptoms)
         )
         conn.commit()
         cursor.close()
@@ -548,6 +578,109 @@ def predict_depression():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Experience weight calculation
+def calculate_experience_weight(years):
+    """Calculate weight based on years of experience"""
+    if years >= 20:
+        return 1.0
+    elif years >= 15:
+        return 0.9
+    elif years >= 10:
+        return 0.8
+    elif years >= 5:
+        return 0.7
+    else:
+        return 0.6
+
+# Location weight calculation
+def calculate_location_weight(doctor_location, user_location):
+    """Calculate weight based on location match"""
+    if doctor_location.lower() == user_location.lower():
+        return 1.0
+    elif doctor_location.lower() in location_fallback_map.get(user_location.lower(), []):
+        return 0.8
+    else:
+        return 0.6
+
+def calculate_interest_similarity(user_text, doctor_text):
+    """Calculate similarity between user text and doctor's text using TF-IDF"""
+    if not user_text or not doctor_text:
+        return 0.0
+    
+    # Create TF-IDF vectorizer
+    vectorizer = TfidfVectorizer(stop_words='english')
+    
+    # Create document matrix
+    tfidf_matrix = vectorizer.fit_transform([user_text, doctor_text])
+    
+    # Calculate cosine similarity
+    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    
+    return similarity
+
+def get_recommended_doctors(user_info, risk_level, symptoms):
+    """Get recommended doctors using content-based filtering"""
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get all doctors
+        cursor.execute("""
+            SELECT 
+                id, name, specialty, location, experience, 
+                phone_number, area_of_interest
+            FROM doctors
+        """)
+        doctors = cursor.fetchall()
+        
+        # Calculate scores for each doctor
+        doctor_scores = []
+        for doctor in doctors:
+            # Calculate specialty weight based on risk level
+            specialty_weight = specialty_weights.get(doctor['specialty'], {}).get(risk_level, 0.5)
+            
+            # Calculate experience weight
+            experience_weight = calculate_experience_weight(doctor['experience'])
+            
+            # Calculate location weight
+            location_weight = calculate_location_weight(doctor['location'], user_info['location'])
+            
+            # Calculate interest/symptoms similarity
+            interest_similarity = calculate_interest_similarity(
+                symptoms + ' ' + user_info['interest'],
+                doctor['area_of_interest']
+            )
+            
+            # Calculate final score (weighted average)
+            final_score = (
+                specialty_weight * 0.35 +  # 35% weight for specialty match
+                experience_weight * 0.25 +  # 25% weight for experience
+                location_weight * 0.20 +    # 20% weight for location
+                interest_similarity * 0.20   # 20% weight for interest/symptoms match
+            )
+            
+            # Format doctor information as a string with newlines
+            doctor_info = f"{doctor['name']} - {doctor['specialty']}\nLocation: {doctor['location']}\nExperience: {doctor['experience']}\nArea of Interest: {doctor['area_of_interest']}\nPhone: {doctor['phone_number']}\nMatch Score: {int(final_score * 100)}%"
+            
+            doctor_scores.append((doctor_info, final_score))
+        
+        # Sort doctors by score in descending order
+        doctor_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        # Return top 3 doctors (or all if less than 3)
+        recommended_doctors = [doc[0] for doc in doctor_scores[:3]]
+        
+        return recommended_doctors
+
+    except Exception as e:
+        print(f"Error getting recommended doctors: {e}")
+        return []
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 @user_bp.route('/result')
 def result():
     # Check if we have the required session data
@@ -559,76 +692,20 @@ def result():
     user_info = session.get('user_info')
     result = session.get('result')
     risk_level = session.get('risk_level')
+    symptoms = session.get('symptoms', '')  # Get symptoms if available
     
     if not all([score, user_info, result, risk_level]):
         return redirect(url_for('user.test'))
     
-    # Get recommended doctors based on assessment and interest
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-
-        # Get fallback locations for the user's location
-        location = user_info['location'].lower()
-        fallback_locations = location_fallback_map.get(location, location_fallback_map['default'])
-        
-        # Create the location condition for the SQL query
-        location_conditions = ' OR '.join(['location = %s' for _ in fallback_locations])
-        
-        # Query to get all potential doctors
-        query = f"""
-            SELECT 
-                name, specialty, location, experience, phone_number, area_of_interest,
-                CASE 
-                    WHEN location = %s THEN 'In your city'
-                    ELSE CONCAT('Available in ', location)
-                END as match_type,
-                CASE
-                    WHEN location = %s THEN 100
-                    WHEN location IN ({', '.join(['%s' for _ in fallback_locations])}) THEN 80
-                    ELSE 60
-                END as match_score
-            FROM doctors 
-            WHERE location = %s OR location IN ({', '.join(['%s' for _ in fallback_locations])})
-            ORDER BY match_score DESC
-            LIMIT 10
-        """
-        
-        # Create parameters list
-        params = [
-            location,  # For CASE WHEN location = %s
-            location,  # For CASE WHEN location = %s
-            *fallback_locations,  # For IN clause in match_score
-            location,  # For WHERE location = %s
-            *fallback_locations  # For WHERE location IN
-        ]
-        
-        cursor.execute(query, params)
-        doctors = cursor.fetchall()
-        cursor.close()
-        conn.close()
-
-        # Format doctor information for display
-        doctor_list = []
-        for doc in doctors:
-            match_percentage = round(doc['match_score'])
-            doctor_info = f"{doc['name']} - {doc['specialty']}\n"
-            doctor_info += f"Location: {doc['location']}\n"
-            doctor_info += f"Experience: {doc['experience']} years\n"
-            doctor_info += f"Area of Interest: {doc['area_of_interest']}\n"
-            doctor_info += f"Contact: {doc['phone_number']}\n"
-            doctor_info += f"Match Quality: {doc['match_type']} ({match_percentage}% match)"
-            doctor_list.append(doctor_info)
-
-    except Exception as e:
-        print(f"Error fetching doctors: {str(e)}")
-        doctor_list = []
+    # Get recommended doctors using content-based filtering
+    doctor_list = get_recommended_doctors(user_info, risk_level, symptoms)
     
     # Clear session data after retrieving it
     session.pop('score', None)
     session.pop('user_info', None)
     session.pop('result', None)
     session.pop('risk_level', None)
+    session.pop('symptoms', None)
     
     return render_template('result.html',
                          score=score,
