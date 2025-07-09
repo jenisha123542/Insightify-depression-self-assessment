@@ -471,7 +471,7 @@
                         <i class="fas fa-user"></i>
                     </a>
                     <div class="dropdown-content" id="profileDropdown">
-                        <a href="#">Edit Profile</a>
+                        <a href="{{ url_for('user.profile') }}">Edit Profile</a>
                         <a href="#" onclick="handleLogout(event)">Logout</a>
                         <form id="logoutForm" action="{{ url_for('user.logout') }}" method="POST" style="display: none;"></form>
                     </div>

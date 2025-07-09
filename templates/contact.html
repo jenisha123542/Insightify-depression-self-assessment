@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Contact Insightify. Reach out to us for support, questions, or feedback.">
     <title>Contact Us - Insightify</title>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <style>
         /* Global Styles */
@@ -13,7 +14,7 @@
 :root {
     --primary-color: #3498db;
     --secondary-color: #2980b9;
-    --accent-color: #e74c3c;
+    --accent-color: #2A9D8F;
     --light-gray: #f4f4f4;
     --dark-gray: #333;
     --text-color: #444;
@@ -313,35 +314,97 @@ main {
         width: 100%;
     }
 }
+
+/* Profile Dropdown Styles (copied from index.html) */
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    border-color: var(--accent-color);
+    background: white;
+    color: var(--accent-color);
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #fff;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    z-index: 1000;
+    margin-top: 10px;
+}
+.dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s ease;
+}
+.dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #F4A460;
+}
+.dropdown-content.show {
+    display: block;
+}
+.dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 16px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #fff;
+}
     </style>
 </head>
 <body>
     <header>
         <div class="logo">
-  <a href="{{ url_for('user.index') }}">
-    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-  </a>
-</div>
-        
+            <a href="{{ url_for('user.index') }}">
+                <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+            </a>
+        </div>
         <nav>
             <ul>
-                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
-                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
+                <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
                 <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
                 <li><a href="{{ url_for('user.about') }}">About</a></li>
                 <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
             </ul>
         </nav>
         <div class="auth">
-    {% if session.get('user_id') %}
-        <form action="{{ url_for('user.logout') }}" method="POST">
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
-        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
-    {% endif %}
-</div>
+            {% if session.get('user_id') %}
+                <div class="profile-dropdown">
+                    <a class="profile-icon" onclick="toggleDropdown(event)">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <div class="dropdown-content" id="profileDropdown">
+                        <a href="{{ url_for('user.profile') }}">Edit Profile</a>
+                        <a href="#" onclick="handleLogout(event)">Logout</a>
+                        <form id="logoutForm" action="{{ url_for('user.logout') }}" method="POST" style="display: none;"></form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+                <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+            {% endif %}
+        </div>
     </header>
 
 <main>
@@ -376,7 +439,7 @@ main {
 
     <section class="contact-info">
         <h3>Get in Touch</h3>
-        <p>If you'd rather reach us through other means, here’s how you can contact us:</p>
+        <p>If you'd rather reach us through other means, here's how you can contact us:</p>
         <ul>
             <li><strong>Email:</strong> support@insightify.com</li>
             <li><strong>Phone:</strong> 01-4579332,01-4539488</li>
@@ -390,7 +453,25 @@ main {
     <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms & Conditions</a></p>
 </footer>
 
-<script src="script.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById("profileDropdown");
+        dropdown.classList.toggle("show");
+    }
+    function handleLogout(event) {
+        event.preventDefault();
+        document.getElementById('logoutForm').submit();
+    }
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById("profileDropdown");
+        const profileIcon = document.querySelector('.profile-icon');
+        if (!profileIcon.contains(event.target) && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+        }
+    });
+</script>
 
 </body>
 </html>

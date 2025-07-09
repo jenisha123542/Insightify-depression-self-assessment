@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Learn more about Insightify, our mission, and how we help with depression self-assessment.">
     <title>About - Insightify</title>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <style>
         /* Global Styles */
@@ -523,9 +524,21 @@ p {
 }
 
 .profile-icon {
-    cursor: pointer;
-    font-size: 1.5rem;
-    color: #F4A460;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    border-color: var(--accent-color);
+    background: white;
+    color: var(--accent-color);
 }
 
 .dropdown-content {
@@ -557,7 +570,6 @@ p {
     display: block;
 }
 
-/* Add a small arrow at the top of dropdown */
 .dropdown-content::before {
     content: '';
     position: absolute;
@@ -573,30 +585,35 @@ p {
 
     <header>
         <div class="logo">
-  <a href="{{ url_for('user.index') }}">
-    <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
-  </a>
-</div>
-        
+            <a href="{{ url_for('user.index') }}">
+                <img src="{{ url_for('static', filename='img/logo.PNG') }}" alt="Insightify Logo">
+            </a>
+        </div>
         <nav>
             <ul>
-                <!-- <li><a href="{{ url_for('user.index') }}">Home</a></li> -->
-                 <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
+                <li><a href="{{ url_for('user.depression') }}">Learn about depression</a></li>
                 <li><a href="{{ url_for('user.test') }}">Take the Test</a></li>
                 <li><a href="{{ url_for('user.about') }}">About</a></li>
                 <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
             </ul>
         </nav>
         <div class="auth">
-    {% if session.get('user_id') %}
-        <form action="{{ url_for('user.logout') }}" method="POST">
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-        <a href="{{ url_for('user.login') }}"><button>Login</button></a>
-        <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
-    {% endif %}
-</div>
+            {% if session.get('user_id') %}
+                <div class="profile-dropdown">
+                    <a class="profile-icon" onclick="toggleDropdown(event)">
+                        <i class="fas fa-user"></i>
+                    </a>
+                    <div class="dropdown-content" id="profileDropdown">
+                        <a href="{{ url_for('user.profile') }}">Edit Profile</a>
+                        <a href="#" onclick="handleLogout(event)">Logout</a>
+                        <form id="logoutForm" action="{{ url_for('user.logout') }}" method="POST" style="display: none;"></form>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{{ url_for('user.login') }}"><button>Login</button></a>
+                <a href="{{ url_for('user.signup') }}"><button>Sign Up</button></a>
+            {% endif %}
+        </div>
     </header>
 
     <main>
@@ -711,43 +728,23 @@ p {
         </div>
     </footer>
 
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
-        function toggleDropdown() {
-            document.getElementById("profileDropdown").classList.toggle("show");
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById("profileDropdown");
+            dropdown.classList.toggle("show");
         }
-
-        // Close the dropdown if the user clicks outside of it
-        window.onclick = function(event) {
-            if (!event.target.matches('.profile-icon') && !event.target.matches('.fa-user')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
+        function handleLogout(event) {
+            event.preventDefault();
+            document.getElementById('logoutForm').submit();
+        }
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById("profileDropdown");
+            const profileIcon = document.querySelector('.profile-icon');
+            if (!profileIcon.contains(event.target) && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
             }
-        }
-        
-        // Simple animation for page elements
-        document.addEventListener('DOMContentLoaded', function() {
-            const elements = document.querySelectorAll('.fade-in');
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = 1;
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            });
-            
-            elements.forEach(element => {
-                element.style.opacity = 0;
-                element.style.transform = 'translateY(20px)';
-                element.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-                observer.observe(element);
-            });
         });
     </script>
 

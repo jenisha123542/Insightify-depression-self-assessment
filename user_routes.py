@@ -595,6 +595,11 @@ def calculate_experience_weight(years):
 # Location weight calculation
 def calculate_location_weight(doctor_location, user_location):
     """Calculate weight based on location match"""
+    if not doctor_location or not user_location:
+        print(f'DEBUG: doctor_location or user_location missing ({doctor_location}, {user_location}), using fallback weight 0.6')
+        return 0.6  # fallback weight if missing
+    doctor_location = str(doctor_location)
+    user_location = str(user_location)
     if doctor_location.lower() == user_location.lower():
         return 1.0
     elif doctor_location.lower() in location_fallback_map.get(user_location.lower(), []):
@@ -621,6 +626,10 @@ def calculate_interest_similarity(user_text, doctor_text):
 def get_recommended_doctors(user_info, risk_level, symptoms):
     """Get recommended doctors using content-based filtering"""
     try:
+        print('DEBUG: get_recommended_doctors called with:')
+        print('  user_info:', user_info)
+        print('  risk_level:', risk_level)
+        print('  symptoms:', symptoms)
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
         
@@ -632,6 +641,11 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
             FROM doctors
         """)
         doctors = cursor.fetchall()
+        print('DEBUG: Number of doctors in DB:', len(doctors))
+        
+        # Defensive: fallback to empty string if missing
+        user_location = user_info.get('location') or ''
+        user_interest = user_info.get('interest') or ''
         
         # Calculate scores for each doctor
         doctor_scores = []
@@ -643,11 +657,11 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
             experience_weight = calculate_experience_weight(doctor['experience'])
             
             # Calculate location weight
-            location_weight = calculate_location_weight(doctor['location'], user_info['location'])
+            location_weight = calculate_location_weight(doctor['location'], user_location)
             
             # Calculate interest/symptoms similarity
             interest_similarity = calculate_interest_similarity(
-                symptoms + ' ' + user_info['interest'],
+                symptoms + ' ' + user_interest,
                 doctor['area_of_interest']
             )
             
@@ -658,7 +672,7 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
                 location_weight * 0.20 +    # 20% weight for location
                 interest_similarity * 0.20   # 20% weight for interest/symptoms match
             )
-            
+            print(f'DEBUG: Doctor {doctor["name"]} - specialty_weight: {specialty_weight}, experience_weight: {experience_weight}, location_weight: {location_weight}, interest_similarity: {interest_similarity}, final_score: {final_score}')
             # Format doctor information as a string with newlines
             doctor_info = f"{doctor['name']} - {doctor['specialty']}\nLocation: {doctor['location']}\nExperience: {doctor['experience']}\nArea of Interest: {doctor['area_of_interest']}\nPhone: {doctor['phone_number']}\nMatch Score: {int(final_score * 100)}%"
             
@@ -669,6 +683,7 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
         
         # Return top 3 doctors (or all if less than 3)
         recommended_doctors = [doc[0] for doc in doctor_scores[:3]]
+        print('DEBUG: Recommended doctors:', recommended_doctors)
         
         return recommended_doctors
 
@@ -714,6 +729,57 @@ def result():
                          user_info=user_info,
                          doctors=doctor_list,
                          current_date=datetime.now().strftime('%B %d, %Y'))
+
+
+@user_bp.route('/profile')
+def profile():
+    if not session.get('user_id'):
+        flash('Please log in to view your profile.', 'warning')
+        return redirect(url_for('user.login'))
+
+    user_id = session['user_id']
+    user = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT fullname, email, age, gender FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        print("Fetched user:", user)
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+    finally:
+        if conn:
+            conn.close()
+
+    return render_template('profile.html', user=user)
+
+@user_bp.route('/update_profile', methods=['POST'])
+def update_profile():
+    if not session.get('user_id'):
+        flash('Please log in to update your profile.', 'warning')
+        return redirect(url_for('user.login'))
+
+    user_id = session['user_id']
+    fullname = request.form.get('fullname', '').strip()
+    email = request.form.get('email', '').strip().lower()
+    age = request.form.get('age', '').strip()
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users SET fullname=%s, email=%s, age=%s WHERE id=%s
+        """, (fullname, email, age, user_id))
+        conn.commit()
+        flash('Profile updated successfully!', 'success')
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        flash('Error updating profile. Please try again.', 'error')
+    finally:
+        if conn:
+            conn.close()
+
+    return redirect(url_for('user.profile'))            
 
 # if __name__ == '__main__':
 #     user_bp.run(debug=True, host='0.0.0.0', port=5000)
