@@ -1060,8 +1060,8 @@ main {
 
                         {% if details | length > 5 %}
                         {% set match_info = (details[5].split(': ')[1] if ': ' in details[5] else '') %}
-                        {% if '(' in match_info and '%' in match_info %}
-                            {% set match_percentage = match_info.split('(')[1].split('%')[0] | int %}
+                        {% if '%' in match_info %}
+                            {% set match_percentage = match_info.split('%')[0] | int %}
                         {% else %}
                             {% set match_percentage = 0 %}
                         {% endif %}

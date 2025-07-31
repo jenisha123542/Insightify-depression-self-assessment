@@ -311,7 +311,7 @@ def login():
 @user_bp.route('/logout', methods=['POST'])
 def logout():
     session.clear()  # clear all session data
-    return redirect(url_for('user.index'))
+    return redirect(url_for('user.login'))
 
 @user_bp.route('/contact', methods=['GET', 'POST'], endpoint='user_contact')
 def contact():
@@ -645,7 +645,7 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
         
         # Defensive: fallback to empty string if missing
         user_location = user_info.get('location') or ''
-        user_interest = user_info.get('interest') or ''
+        user_interest = user_info.get('interest') or 'general'
         
         # Calculate scores for each doctor
         doctor_scores = []
@@ -659,11 +659,17 @@ def get_recommended_doctors(user_info, risk_level, symptoms):
             # Calculate location weight
             location_weight = calculate_location_weight(doctor['location'], user_location)
             
+            # Defensive: fallback for doctor's area_of_interest
+            doctor_interest = doctor['area_of_interest'] or 'general'
+            print(f"DEBUG: Calculating similarity between '{symptoms + ' ' + user_interest}' and '{doctor_interest}'")
             # Calculate interest/symptoms similarity
             interest_similarity = calculate_interest_similarity(
                 symptoms + ' ' + user_interest,
-                doctor['area_of_interest']
+                doctor_interest
             )
+            if interest_similarity == 0.0:
+                print('DEBUG: interest_similarity is 0.0, using fallback value 0.1')
+                interest_similarity = 0.1  # fallback to a small value
             
             # Calculate final score (weighted average)
             final_score = (
